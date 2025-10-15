@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sports Meet Registration - Sunrise English Private School</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
@@ -17,50 +17,61 @@
   <h2 class="text-lg font-bold text-center text-gray-700 mb-8">ANNUAL SPORTS MEET 2025–2026 Registration</h2>
 
   <form id="sportsForm" class="space-y-6">
-    <div>
-      <label class="block font-semibold text-gray-700">Full Name</label>
-      <input type="text" id="name" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
-    </div>
-    <div class="grid grid-cols-2 gap-4">
+    <fieldset class="border border-gray-300 rounded-lg p-4">
+      <legend class="font-semibold text-indigo-700">Student Information</legend>
       <div>
-        <label class="block font-semibold text-gray-700">GR Number</label>
-        <input type="text" id="grNo" maxlength="5" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
+        <label class="block font-semibold text-gray-700">Full Name</label>
+        <input type="text" id="name" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
       </div>
+      <div class="grid grid-cols-2 gap-4 mt-2">
+        <div>
+          <label class="block font-semibold text-gray-700">GR Number</label>
+          <input type="text" id="grNo" maxlength="5" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-700">Class</label>
+          <input type="text" id="class" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4 mt-2">
+        <div>
+          <label class="block font-semibold text-gray-700">Division</label>
+          <input type="text" id="division" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-700">Sports House</label>
+          <select id="house" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
+            <option value="">Select House</option>
+            <option value="Ruby">Ruby</option>
+            <option value="Sapphire">Sapphire</option>
+            <option value="Topaz">Topaz</option>
+            <option value="Emerald">Emerald</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="border border-gray-300 rounded-lg p-4">
+      <legend class="font-semibold text-indigo-700">Personal Details</legend>
       <div>
-        <label class="block font-semibold text-gray-700">Class</label>
-        <input type="text" id="class" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
+        <label class="block font-semibold text-gray-700">Date of Birth</label>
+        <input type="date" id="dob" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
       </div>
-    </div>
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block font-semibold text-gray-700">Division</label>
-        <input type="text" id="division" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
+      <div class="mt-2">
+        <label class="block font-semibold text-gray-700">Category</label>
+        <input type="text" id="category" class="border p-2 w-full rounded-md bg-gray-100 text-gray-600" readonly>
       </div>
-      <div>
-        <label class="block font-semibold text-gray-700">Sports House</label>
-        <select id="house" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
-          <option value="">Select House</option>
-          <option value="Ruby">Ruby</option>
-          <option value="Sapphire">Sapphire</option>
-          <option value="Topaz">Topaz</option>
-          <option value="Emerald">Emerald</option>
-        </select>
-      </div>
-    </div>
-    <div>
-      <label class="block font-semibold text-gray-700">Date of Birth</label>
-      <input type="date" id="dob" class="border p-2 w-full rounded-md focus:ring-2 focus:ring-indigo-400" required>
-    </div>
-    <div>
-      <label class="block font-semibold text-gray-700">Category</label>
-      <input type="text" id="category" class="border p-2 w-full rounded-md bg-gray-100 text-gray-600" readonly>
-    </div>
-    <div id="eventsSection" class="hidden">
-      <label class="block font-semibold text-gray-700 mb-2">Select Events</label>
+    </fieldset>
+
+    <fieldset id="eventsSection" class="hidden border border-gray-300 rounded-lg p-4">
+      <legend class="font-semibold text-indigo-700">Select Events</legend>
       <div id="eventList" class="grid grid-cols-2 gap-2"></div>
       <p id="eventNote" class="text-sm text-gray-600 mt-2"></p>
-    </div>
-    <button type="submit" class="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 w-full font-semibold">Submit Registration</button>
+    </fieldset>
+
+    <button type="submit" class="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 w-full font-semibold">
+      Submit Registration
+    </button>
   </form>
 </div>
 
@@ -80,8 +91,7 @@
       <option value="">Select Event</option>
     </select>
     <button id="downloadFilteredPDF" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Download Filtered PDF</button>
-    <button id="exportCSV" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Export to CSV</button>
-    <button id="backToRegistration" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">Back to Registration</button>
+    <button id="backToRegistration" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 ml-2">Back to Registration</button>
   </div>
   <div class="overflow-x-auto">
     <table class="min-w-full border border-gray-200 text-sm">
@@ -103,53 +113,59 @@
 </div>
 
 <script>
-// --- Firebase Setup ---
+// Firebase Config
 const firebaseConfig = {
-  apiKey: "AIzaSyC-axJOwivMy-bGhNmVIHaXORcG90gLA9g",
-  authDomain: "registration-c78dc.firebaseapp.com",
-  databaseURL: "https://registration-c78dc-default-rtdb.firebaseio.com",
-  projectId: "registration-c78dc",
-  storageBucket: "registration-c78dc.appspot.com",
-  messagingSenderId: "368136278543",
-  appId: "1:368136278543:web:03a46a62d1095f40a0497a"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db = firebase.firestore();
 
-// --- Category & Events ---
+// Categories & Events
 const categories=[
-{name:'Sub Junior',limit:2,min:new Date('2017-01-01')},
-{name:'Junior',limit:3,min:new Date('2015-01-01')},
-{name:'Inter',limit:3,min:new Date('2013-01-01')},
-{name:'Senior',limit:4,min:new Date('2010-01-01')},
-{name:'Super Senior',limit:4,min:new Date('2007-01-01')}
+  {name:'Sub Junior',limit:2,min:new Date('2017-01-01')},
+  {name:'Junior',limit:3,min:new Date('2015-01-01')},
+  {name:'Inter',limit:3,min:new Date('2013-01-01')},
+  {name:'Senior',limit:4,min:new Date('2010-01-01')},
+  {name:'Super Senior',limit:4,min:new Date('2007-01-01')}
 ];
 const eventsByCategory={
-'Sub Junior':['100 mts','200 mts','Long Jump'],
-'Junior':['100 mts','200 mts','400 mts','Long Jump'],
-'Inter':['100 mts','200 mts','800 mts','Long Jump','Shot Put (4kg)'],
-'Senior':['100 mts','200 mts','400 mts','800 mts','Long Jump','Shot Put','1500 mts'],
-'Super Senior':['100 mts','200 mts','400 mts','800 mts','Long Jump','Shot Put','1500 mts']
+  'Sub Junior':['100 mts','200 mts','Long Jump'],
+  'Junior':['100 mts','200 mts','400 mts','Long Jump'],
+  'Inter':['100 mts','200 mts','800 mts','Long Jump','Shot Put (4kg)'],
+  'Senior':['100 mts','200 mts','400 mts','800 mts','Long Jump','Shot Put','1500 mts'],
+  'Super Senior':['100 mts','200 mts','400 mts','800 mts','Long Jump','Shot Put','1500 mts']
 };
 
-// --- Elements ---
+// DOM Elements
 const form=document.getElementById('sportsForm');
 const dobInput=document.getElementById('dob');
 const categoryField=document.getElementById('category');
 const eventsSection=document.getElementById('eventsSection');
 const eventList=document.getElementById('eventList');
 const eventNote=document.getElementById('eventNote');
+const adminPanel=document.getElementById('adminPanel');
+const mainContainer=document.getElementById('mainContainer');
 
-// --- Determine Category ---
+// Category calculation
+function getCategory(dob){
+  const parts=dob.split('-');
+  const birthDate=new Date(parts[0],parts[1]-1,parts[2]);
+  for(let c of categories) if(birthDate>=c.min) return c.name;
+  return 'Super Senior';
+}
+
+// Update events
 dobInput.addEventListener('change',()=>{
-  const dob = new Date(dobInput.value);
-  let cat='Super Senior';
-  for(let c of categories){ if(dob >= c.min){ cat=c.name; break; } }
+  const cat=getCategory(dobInput.value);
   categoryField.value=cat;
-  // Show Events
   eventsSection.classList.remove('hidden');
   eventList.innerHTML='';
-  const limit = categories.find(c=>c.name===cat).limit;
+  const limit=categories.find(c=>c.name===cat).limit;
   eventNote.textContent=`You can select up to ${limit} events.`;
   eventsByCategory[cat].forEach(ev=>{
     const label=document.createElement('label');
@@ -164,140 +180,114 @@ dobInput.addEventListener('change',()=>{
   });
 });
 
-// --- Submit Registration ---
-form.addEventListener('submit', e=>{
+// Submit registration
+form.addEventListener('submit',async e=>{
   e.preventDefault();
-  const name=form.name.value.trim();
-  const grNo=form.grNo.value.trim();
-  const classVal=form.class.value.trim();
-  const division=form.division.value.trim();
-  const house=form.house.value;
-  const dob=dobInput.value;
-  const category=categoryField.value;
-  const events=Array.from(document.querySelectorAll('.eventCheck:checked')).map(c=>c.value);
-  if(events.length===0){alert('Select at least one event'); return;}
-  
-  const student={name, grNo, class: classVal, division, house, dob, category, events};
-  db.ref('registrations/'+grNo).set(student, err=>{
-    if(err){alert('Error saving registration'); return;}
+  const gr=document.getElementById('grNo').value.trim();
+  if(!/^[0-9]{5}$/.test(gr)){alert('Invalid GR Number!');return;}
+  const selectedEvents=Array.from(document.querySelectorAll('.eventCheck:checked')).map(e=>e.value);
+  if(selectedEvents.length===0){alert('Select at least 1 event');return;}
+  const student={
+    name:document.getElementById('name').value,
+    grNo:gr,
+    class:document.getElementById('class').value,
+    division:document.getElementById('division').value,
+    house:document.getElementById('house').value,
+    dob:dobInput.value,
+    category:categoryField.value,
+    events:selectedEvents
+  };
+  try{
+    // Save to Firestore
+    await db.collection('registrations').doc(gr).set(student);
     alert('Registration successful!');
     generatePDF(student);
     form.reset();
-    categoryField.value='';
-    eventsSection.classList.add('hidden');
-  });
+    categoryField.value=''; eventsSection.classList.add('hidden');
+  }catch(err){console.error(err); alert('Error saving registration');}
 });
 
-// --- Generate PDF ---
+// Generate PDF
 function generatePDF(data){
   const content=document.createElement('div');
-  content.style.padding='20px';
-  content.style.fontFamily='Arial,sans-serif';
+  content.style.padding='20px'; content.style.fontFamily='Arial,sans-serif'; content.style.fontSize='12px'; content.style.lineHeight='1.5';
   content.innerHTML=`
-  <div style="text-align:center;font-weight:bold;">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C- ABU DHABI</div>
-  <div style="text-align:center;font-weight:bold;margin-bottom:15px;">ANNUAL SPORTS MEET 2025-2026</div>
+  <div style="text-align:center; font-weight:bold; font-size:16px;">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C- ABU DHBAI</div>
+  <div style="text-align:center; font-weight:bold; font-size:14px; margin-bottom:15px;">ANNUAL SPORTS MEET 2025-2026</div>
   <p>Dear Parents,</p>
-  <p>Full name of the student: ${data.name}</p>
-  <p>Class: ${data.class}</p>
-  <p>Division: ${data.division}</p>
-  <p>Date of Birth: ${data.dob}</p>
-  <p>GR NO: ${data.grNo}</p>
-  <p>Sports House: ${data.house}</p>
-  <p>CATEGORY: ${data.category}</p>
-  <p>Events:</p>
-  <ul>${data.events.map(e=>`<li>${e}</li>`).join('')}</ul>
-  <p>Allow / Don’t Allow: ________________________</p>
+  <p>Greetings!</p>
+  <p>We are pleased to inform you that the Annual Sports Meet for Boys and Girls will be held on the following dates:</p>
+  <p style="text-align:center;">26th & 27th November 2025 (Wednesday & Thursday)<br>8th December 2025 (Monday)</p>
+  <p><strong>Full name of the student:</strong> ${data.name}</p>
+  <p><strong>Class:</strong> ${data.class}</p>
+  <p><strong>Division:</strong> ${data.division}</p>
+  <p><strong>Date of Birth (As per school record):</strong> ${data.dob}</p>
+  <p><strong>GR NO:</strong> ${data.grNo}</p>
+  <p><strong>Sports House:</strong> ${data.house}</p>
+  <p><strong>CATEGORY:</strong> ${data.category}</p>
+  <p><strong>Please Note:</strong></p>
+  <ul style="margin-left:20px;">
+    <li>House-wise relay (4x100) for inter, senior, and super senior categories only.</li>
+    <li>Track event selection: Athletes will be selected based on their timing performance.</li>
+    <li>A time trial will be conducted.</li>
+    <li>The top 8 athletes with the best times will qualify for the finals.</li>
+    <li>Entry Submission: All entries must be submitted on or before 24th October 2025.</li>
+  </ul>
+  <p>My ward will participate in the following events:</p>
+  <ul style="margin-left:20px;">${data.events.map(e=>`<li>${e}</li>`).join('')}</ul>
+  <p><strong>Allow / Don’t Allow:</strong> ___________________________</p>
   `;
-  html2pdf().set({margin:[10,10,10,10], filename:`${data.name}_SportsMeet.pdf`, html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4'}}).from(content).save();
+  html2pdf().set({margin:[10,10,10,10],filename:`${data.name}_SportsMeet2025.pdf`,html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(content).save();
 }
 
-// --- Admin Button ---
+// Admin Button
 const adminBtn=document.createElement('button');
-adminBtn.textContent='Open Admin Panel';
-adminBtn.className='fixed top-2 right-2 bg-red-600 text-white px-4 py-2 rounded z-50';
+adminBtn.textContent='Admin Panel';
+adminBtn.className='fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg z-50';
 document.body.appendChild(adminBtn);
-adminBtn.addEventListener('click', ()=>{
+adminBtn.addEventListener('click',()=>{ 
   const pass=prompt('Enter admin password:');
   if(pass==='SUN2025'){
-    document.getElementById('mainContainer').classList.add('hidden');
-    document.getElementById('adminPanel').classList.remove('hidden');
+    mainContainer.classList.add('hidden');
+    adminPanel.classList.remove('hidden');
     loadAdminData();
-  }else alert('Incorrect password');
+  }else alert('Wrong password!');
 });
 
-// --- Load Admin Data ---
-function loadAdminData(filterCat='', filterEvent=''){
-  db.ref('registrations').once('value', snapshot=>{
-    let data = snapshot.val() || {};
-    let rows='';
-    Object.values(data).forEach(d=>{
-      if(filterCat && d.category!==filterCat) return;
-      if(filterEvent && !d.events.includes(filterEvent)) return;
-      rows+=`
-        <tr>
-          <td class='border px-2 py-1'>${d.name}</td>
-          <td class='border px-2 py-1'>${d.grNo}</td>
-          <td class='border px-2 py-1'>${d.class}</td>
-          <td class='border px-2 py-1'>${d.division}</td>
-          <td class='border px-2 py-1'>${d.house}</td>
-          <td class='border px-2 py-1'>${d.category}</td>
-          <td class='border px-2 py-1'>${d.events.join(', ')}</td>
-          <td class='border px-2 py-1'><button class='bg-red-500 text-white px-2 py-1 rounded' onclick="removeRegistration('${d.grNo}')">Remove</button></td>
-        </tr>
-      `;
-    });
-    document.getElementById('adminTable').innerHTML=rows;
+// Load admin
+async function loadAdminData(){
+  const table=document.getElementById('adminTable');
+  const snapshot=await db.collection('registrations').get();
+  table.innerHTML='';
+  snapshot.forEach(doc=>{
+    const d=doc.data();
+    const row=document.createElement('tr');
+    row.innerHTML=`
+      <td class='border px-2 py-1'>${d.name}</td>
+      <td class='border px-2 py-1'>${d.grNo}</td>
+      <td class='border px-2 py-1'>${d.class}</td>
+      <td class='border px-2 py-1'>${d.division}</td>
+      <td class='border px-2 py-1'>${d.house}</td>
+      <td class='border px-2 py-1'>${d.category}</td>
+      <td class='border px-2 py-1'>${d.events.join(', ')}</td>
+      <td class='border px-2 py-1'>
+        <button class='bg-red-500 text-white px-2 py-1 rounded' onclick="removeRegistration('${d.grNo}')">Remove</button>
+      </td>`;
+    table.appendChild(row);
   });
 }
 
-// --- Remove Registration ---
-function removeRegistration(grNo){
-  if(confirm('Remove this registration?')){
-    db.ref('registrations/'+grNo).remove();
-    loadAdminData();
-  }
+// Remove registration
+async function removeRegistration(gr){
+  if(!confirm('Remove this registration?')) return;
+  await db.collection('registrations').doc(gr).delete();
+  loadAdminData();
 }
 
-// --- Back to Registration ---
+// Back to registration
 document.getElementById('backToRegistration').addEventListener('click',()=>{
-  document.getElementById('adminPanel').classList.add('hidden');
-  document.getElementById('mainContainer').classList.remove('hidden');
-});
-
-// --- Filter ---
-document.getElementById('filterCategory').addEventListener('change', e=>{
-  const cat=e.target.value;
-  const eventSelect=document.getElementById('filterEvent');
-  eventSelect.innerHTML='<option value="">Select Event</option>';
-  if(eventsByCategory[cat]) eventsByCategory[cat].forEach(ev=>{
-    eventSelect.innerHTML+=`<option value="${ev}">${ev}</option>`;
-  });
-});
-document.getElementById('filterEvent').addEventListener('change', ()=>{
-  loadAdminData(document.getElementById('filterCategory').value, document.getElementById('filterEvent').value);
-});
-
-// --- Download Filtered PDF ---
-document.getElementById('downloadFilteredPDF').addEventListener('click', ()=>{
-  db.ref('registrations').once('value', snapshot=>{
-    const data = snapshot.val() || {};
-    Object.values(data).forEach(generatePDF);
-  });
-});
-
-// --- Export CSV ---
-document.getElementById('exportCSV').addEventListener('click', ()=>{
-  db.ref('registrations').once('value', snapshot=>{
-    const data = snapshot.val() || {};
-    const csvRows=[['Name','GR No','Class','Division','House','Category','Events']];
-    Object.values(data).forEach(d=>{
-      csvRows.push([d.name,d.grNo,d.class,d.division,d.house,d.category,d.events.join('; ')]);
-    });
-    const csvContent=csvRows.map(e=>e.join(',')).join('\n');
-    const blob=new Blob([csvContent], {type:'text/csv'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download='SportsMeet2025_Registrations.csv'; a.click(); URL.revokeObjectURL(url);
-  });
+  adminPanel.classList.add('hidden');
+  mainContainer.classList.remove('hidden');
 });
 </script>
 </body>
