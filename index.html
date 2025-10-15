@@ -107,7 +107,6 @@ const firebaseConfig = {
   storageBucket: "registration-c78dc.appspot.com",
   messagingSenderId: "368136278543",
   appId: "1:368136278543:web:03a46a62d1095f40a0497a",
-  measurementId: "G-14V6C8VSCH"
 };
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
@@ -186,7 +185,7 @@ form.addEventListener('submit',e=>{
  }).catch(err=>{alert('Error saving registration: '+err);});
 });
 
-// Generate PDF
+// Generate PDF function same as before
 function generatePDF(data){
  const content=document.createElement('div');
  content.style.padding='20px';
@@ -229,7 +228,7 @@ adminBtn.className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 mb-
 adminBtn.onclick=openAdmin;
 document.body.insertBefore(adminBtn, document.getElementById('mainContainer'));
 
-// Admin panel
+// Admin panel functions same as before
 function openAdmin(){
  const pass=prompt('Enter admin password:');
  if(pass!=='SUN2025'){alert('Incorrect password'); return;}
@@ -237,7 +236,6 @@ function openAdmin(){
  document.getElementById('adminPanel').classList.remove('hidden');
  loadAdminData();
 }
-
 function loadAdminData(){
  db.ref('registrations').once('value').then(snapshot=>{
    const data=snapshot.val()||{};
@@ -261,8 +259,6 @@ function loadAdminData(){
    });
  });
 }
-
-// Back to registration
 document.getElementById('backToRegistration').addEventListener('click',()=>{
  document.getElementById('adminPanel').classList.add('hidden');
  document.getElementById('mainContainer').classList.remove('hidden');
@@ -270,4 +266,3 @@ document.getElementById('backToRegistration').addEventListener('click',()=>{
 </script>
 </body>
 </html>
-
