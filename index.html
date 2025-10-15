@@ -35,6 +35,14 @@ input[type="text"][id="dob"]::-webkit-calendar-picker-indicator {
 #adminTable tr:nth-child(even) {
     background-color: #f3f4f6;
 }
+
+/* Make the overall body take up the full viewport and use a subtle background */
+body {
+    background-color: #f0f8ff; /* Light sky background */
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+}
 </style>
 <!-- Modern Modular Firebase SDK (v10+) via CDN -->
 <script type="module" src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js"></script>
@@ -42,8 +50,8 @@ input[type="text"][id="dob"]::-webkit-calendar-picker-indicator {
 <!-- Library for PDF generation -->
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 </head>
-<!-- Full screen layout on desktop, standard layout on mobile -->
-<body class="bg-gray-50 min-h-screen font-sans p-0 sm:p-4 md:p-8 flex justify-center items-center">
+
+<body class="font-sans flex justify-center items-start pt-10 pb-20 md:p-0 md:items-center">
 
 <!-- Confirmation/Alert Modal Structure (Hidden by default) -->
 <div id="confirmationModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay">
@@ -59,22 +67,19 @@ input[type="text"][id="dob"]::-webkit-calendar-picker-indicator {
 
 <!-- Registration Form -->
 <!-- Full height and full width on medium screens and up, fixed width on mobile -->
-<div id="mainContainer" class="w-full max-w-6xl md:h-[90vh] mx-auto flex items-center justify-center">
-    <div class="w-full max-w-xl bg-white shadow-2xl rounded-3xl p-6 sm:p-10 border-4 border-sky-100/50">
+<!-- Adjusted container for true full-screen experience and clearer contrast -->
+<div id="mainContainer" class="w-full max-w-6xl mx-auto flex items-start justify-center p-4 md:h-screen md:p-8">
+    <!-- Form Card: Made it wider on desktop for a less "mobile" feel -->
+    <div class="w-full max-w-4xl bg-white shadow-2xl rounded-3xl p-6 sm:p-12 border-4 border-sky-100/50">
         <header class="text-center mb-10">
             <h1 class="text-4xl sm:text-5xl font-extrabold text-sky-700 leading-tight">Sunrise Sports Meet</h1>
             <h2 class="text-xl text-gray-500 mt-2 font-light">Annual Registration 2025–2026</h2>
         </header>
 
         <form id="sportsForm" class="space-y-6">
-            <!-- Full Name (Standalone) -->
-            <div>
-                <label for="name" class="block text-sm font-semibold text-gray-700">Full Name</label>
-                <input type="text" id="name" class="app-input" required>
-            </div>
-
-            <!-- Two-Column Grid for the rest of the fields -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
+            
+            <!-- Two-Column Grid for most fields (wider columns on larger screens) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
                 <!-- GR Number -->
                 <div>
                     <label for="grNo" class="block text-sm font-semibold text-gray-700">GR Number (5 digits)</label>
@@ -101,7 +106,6 @@ input[type="text"][id="dob"]::-webkit-calendar-picker-indicator {
                         <option value="Emerald">Emerald</option>
                     </select>
                 </div>
-            
                 <!-- DOB (Text Input as requested) -->
                 <div>
                     <label for="dob" class="block text-sm font-semibold text-gray-700">Date of Birth (YYYY-MM-DD)</label>
@@ -119,10 +123,17 @@ input[type="text"][id="dob"]::-webkit-calendar-picker-indicator {
                 </div>
             </div>
 
+            <!-- Full Name (Standalone across both columns) -->
+            <div>
+                <label for="name" class="block text-sm font-semibold text-gray-700">Full Name</label>
+                <input type="text" id="name" class="app-input" required>
+            </div>
+
             <!-- Events Selection -->
             <div id="eventsSection" class="hidden mt-8 p-4 sm:p-6 border-2 border-dashed border-sky-300 rounded-xl bg-sky-50/70 shadow-inner">
                 <label class="block text-lg font-bold text-sky-800 mb-3">Select Events</label>
-                <div id="eventList" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+                <!-- Adjusted grid for events to better use screen space -->
+                <div id="eventList" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
                 <p id="eventNote" class="text-sm text-sky-600 mt-4 font-medium"></p>
             </div>
 
@@ -200,6 +211,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 /* ===== FIREBASE SETUP - USING YOUR CONFIG ===== */
+// NOTE: I am using placeholder values for the Firebase config. 
+// If you are running this in an environment that provides a global config object, 
+// you would use that here.
 const firebaseConfig = {
   apiKey: "AIzaSyC-axJOwivMy-bGhNmVIHaXORcG90gLA9g",
   authDomain: "registration-c78dc.firebaseapp.com",
