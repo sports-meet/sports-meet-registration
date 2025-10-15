@@ -202,7 +202,7 @@ form.addEventListener('submit', e=>{
 
 // -------------------- ADMIN PANEL --------------------
 document.addEventListener('keydown', e=>{
-  if(e.ctrlKey && e.shiftKey && e.key.toLowerCase()==='a'){
+  if(e.ctrlKey && e.shiftKey && e.key.toLowerCase()==='s'){
     const pass = prompt('Enter admin password:');
     if(pass==='SUN2025'){
       document.getElementById('mainContainer').classList.add('hidden');
@@ -275,3 +275,4 @@ function generatePDF(data){
 </script>
 </body>
 </html>
+
