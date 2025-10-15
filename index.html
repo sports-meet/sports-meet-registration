@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sports Meet Registration - Sunrise English Private School</title>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-r from-indigo-50 to-blue-100 min-h-screen font-sans">
@@ -114,113 +112,146 @@
 </div>
 
 <script>
-// -------------------- FIREBASE SETUP --------------------
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// -------------------- CATEGORY & EVENTS --------------------
+// Variables
+const form = document.getElementById('sportsForm');
 const dobInput = document.getElementById('dob');
 const categoryField = document.getElementById('category');
 const eventsSection = document.getElementById('eventsSection');
 const eventList = document.getElementById('eventList');
 const eventNote = document.getElementById('eventNote');
+
 const categories = [
-  { name:'Sub Junior', limit:2, min:new Date('2017-01-01') },
-  { name:'Junior', limit:3, min:new Date('2015-01-01') },
-  { name:'Inter', limit:3, min:new Date('2013-01-01') },
-  { name:'Senior', limit:4, min:new Date('2010-01-01') },
-  { name:'Super Senior', limit:4, min:new Date('2007-01-01') }
+  { name: 'Sub Junior', limit: 2, min: new Date('2017-01-01') },
+  { name: 'Junior', limit: 3, min: new Date('2015-01-01') },
+  { name: 'Inter', limit: 3, min: new Date('2013-01-01') },
+  { name: 'Senior', limit: 4, min: new Date('2010-01-01') },
+  { name: 'Super Senior', limit: 4, min: new Date('2007-01-01') }
 ];
+
 const eventsByCategory = {
-  'Sub Junior':['100 mts','200 mts','Long Jump'],
-  'Junior':['100 mts','200 mts','400 mts','Long Jump'],
-  'Inter':['100 mts','200 mts','800 mts','Long Jump','Shot Put (4kg)'],
-  'Senior':['100 mts','200 mts','400 mts','800 mts','Long Jump','Shot Put','1500 mts'],
-  'Super Senior':['100 mts','200 mts','400 mts','800 mts','Long Jump','Shot Put','1500 mts']
+  'Sub Junior': ['100 mts','200 mts','Long Jump'],
+  'Junior': ['100 mts','200 mts','400 mts','Long Jump'],
+  'Inter': ['100 mts','200 mts','800 mts','Long Jump','Shot Put (4kg)'],
+  'Senior': ['100 mts','200 mts','400 mts','800 mts','Long Jump','Shot Put','1500 mts'],
+  'Super Senior': ['100 mts','200 mts','400 mts','800 mts','Long Jump','Shot Put','1500 mts']
 };
 
-// -------------------- CATEGORY CALC --------------------
-function getCategory(dob){
+const registeredGRs = new Set(JSON.parse(localStorage.getItem('registeredGRs') || '[]'));
+
+// Escape HTML
+function escapeHTML(text) {
+  return text.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// Category based on DOB
+function getCategory(dob) {
   const parts = dob.split('-');
   const birthDate = new Date(parts[0], parts[1]-1, parts[2]);
-  for(let c of categories) if(birthDate>=c.min) return c.name;
+  for (let c of categories) if (birthDate >= c.min) return c.name;
   return 'Super Senior';
 }
-dobInput.addEventListener('change',()=>{
+
+// Update events
+dobInput.addEventListener('change', () => {
   const cat = getCategory(dobInput.value);
   categoryField.value = cat;
   eventsSection.classList.remove('hidden');
-  eventList.innerHTML='';
-  const limit = categories.find(c=>c.name===cat).limit;
-  eventNote.textContent=`You can select up to ${limit} events.`;
-  eventsByCategory[cat].forEach(ev=>{
+  eventList.innerHTML = '';
+  const limit = categories.find(c => c.name === cat).limit;
+  eventNote.textContent = `You can select up to ${limit} events.`;
+  eventsByCategory[cat].forEach(ev => {
     const label = document.createElement('label');
-    label.className='flex items-center space-x-2';
-    label.innerHTML=`<input type='checkbox' value='${ev}' class='eventCheck'> <span>${ev}</span>`;
+    label.className = 'flex items-center space-x-2';
+    label.innerHTML = `<input type='checkbox' value='${ev}' class='eventCheck'> <span>${ev}</span>`;
     eventList.appendChild(label);
   });
-  document.querySelectorAll('.eventCheck').forEach(chk=>{
-    chk.addEventListener('change',()=>{
-      if(document.querySelectorAll('.eventCheck:checked').length>limit){chk.checked=false;alert(`You can select only ${limit} events.`);}
+  document.querySelectorAll('.eventCheck').forEach(chk => {
+    chk.addEventListener('change', () => {
+      if (document.querySelectorAll('.eventCheck:checked').length > limit) {
+        chk.checked = false;
+        alert(`You can select only ${limit} events.`);
+      }
     });
   });
 });
 
-// -------------------- FORM SUBMISSION --------------------
-form.addEventListener('submit', e=>{
+// Submit registration
+form.addEventListener('submit', e => {
   e.preventDefault();
   const gr = document.getElementById('grNo').value.trim();
-  if(!/^[0-9]{5}$/.test(gr)){alert('Invalid GR Number!'); return;}
-  const selectedEvents = Array.from(document.querySelectorAll('.eventCheck:checked')).map(e=>e.value);
-  if(selectedEvents.length===0){alert('Select at least one event'); return;}
+  if (!/^[0-9]{5}$/.test(gr)) { alert('Invalid GR Number!'); return; }
+  if (registeredGRs.has(gr)) { alert('This GR Number is already registered!'); return; }
+  const selectedEvents = Array.from(document.querySelectorAll('.eventCheck:checked')).map(e => e.value);
+  if (selectedEvents.length === 0) { alert('Please select at least one event.'); return; }
   const student = {
-    name: document.getElementById('name').value,
+    name: escapeHTML(document.getElementById('name').value),
     grNo: gr,
-    class: document.getElementById('class').value,
-    division: document.getElementById('division').value,
-    house: document.getElementById('house').value,
+    class: escapeHTML(document.getElementById('class').value),
+    division: escapeHTML(document.getElementById('division').value),
+    house: escapeHTML(document.getElementById('house').value),
     dob: dobInput.value,
     category: categoryField.value,
     events: selectedEvents
   };
-  // Push to Firebase
-  db.ref('registrations/'+gr).set(student).then(()=>{
-    generatePDF(student);
-    alert('Registration successful! PDF downloading...');
-    form.reset(); categoryField.value=''; eventsSection.classList.add('hidden');
-  }).catch(err=>alert('Error saving data: '+err));
+  const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+  registrations.push(student);
+  localStorage.setItem('registrations', JSON.stringify(registrations));
+  registeredGRs.add(gr);
+  localStorage.setItem('registeredGRs', JSON.stringify(Array.from(registeredGRs)));
+  generatePDF(student);
+  alert('Registration successful! PDF is downloading...');
+  form.reset(); categoryField.value=''; eventsSection.classList.add('hidden');
 });
 
-// -------------------- ADMIN PANEL --------------------
-document.addEventListener('keydown', e=>{
-  if(e.ctrlKey && e.shiftKey && e.key.toLowerCase()==='s'){
+// PDF generation
+function generatePDF(data){
+  const content=document.createElement('div');
+  content.style.padding='20px'; content.style.fontFamily='Arial,sans-serif'; content.style.fontSize='12px'; content.style.lineHeight='1.5';
+  content.innerHTML=`<div style="text-align:center; font-weight:bold; font-size:16px;">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C- ABU DHBAI</div>
+  <div style="text-align:center; font-weight:bold; font-size:14px; margin-bottom:15px;">ANNUAL SPORTS MEET 2025-2026</div>
+  <p>Dear Parents,</p>
+  <p>Greetings!</p>
+  <p>We are pleased to inform you that the Annual Sports Meet for Boys and Girls will be held on the following dates:</p>
+  <p style="text-align:center;">26th & 27th November 2025 (Wednesday & Thursday)<br>8th December 2025 (Monday)</p>
+  <p><strong>Full name of the student:</strong> ${data.name}</p>
+  <p><strong>Class:</strong> ${data.class}</p>
+  <p><strong>Division:</strong> ${data.division}</p>
+  <p><strong>Date of Birth (As per school record):</strong> ${data.dob}</p>
+  <p><strong>GR NO:</strong> ${data.grNo}</p>
+  <p><strong>Sports House:</strong> ${data.house}</p>
+  <p><strong>CATEGORY:</strong> ${data.category}</p>
+  <p><strong>Please Note:</strong></p>
+  <ul style="margin-left:20px;">
+    <li>House-wise relay (4x100) for inter, senior, and super senior categories only.</li>
+    <li>Track event selection: Athletes will be selected based on their timing performance.</li>
+    <li>A time trial will be conducted.</li>
+    <li>The top 8 athletes with the best times will qualify for the finals.</li>
+    <li>Entry Submission: All entries must be submitted on or before 24th October 2025.</li>
+  </ul>
+  <p>My ward will participate in the following events:</p>
+  <ul style="margin-left:20px;">${data.events.map(e=>`<li>${e}</li>`).join('')}</ul>
+  <p><strong>Allow / Don’t Allow:</strong> ___________________________</p>`;
+  html2pdf().set({margin:[10,10,10,10],filename:`${data.name}_SportsMeet2025.pdf`,html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(content).save();
+}
+
+// Admin shortcut Ctrl+Shift+S
+document.addEventListener('keydown', e => {
+  if(e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 's'){
     const pass = prompt('Enter admin password:');
-    if(pass==='SUN2025'){
+    if(pass === 'SUN2025'){
       document.getElementById('mainContainer').classList.add('hidden');
       document.getElementById('adminPanel').classList.remove('hidden');
       loadAdminData();
-    } else alert('Incorrect password');
+    } else alert('Incorrect password.');
   }
 });
 
+// Admin functions
 function loadAdminData(){
+  const data = JSON.parse(localStorage.getItem('registrations')||'[]');
   const table = document.getElementById('adminTable');
-  db.ref('registrations').on('value', snapshot=>{
-    const data = snapshot.val();
-    table.innerHTML='';
-    for(let key in data){
-      const d = data[key];
-      const tr = document.createElement('tr');
-      tr.innerHTML=`
+  table.innerHTML = data.map((d,idx)=>`
+    <tr>
       <td class='border px-2 py-1'>${d.name}</td>
       <td class='border px-2 py-1'>${d.grNo}</td>
       <td class='border px-2 py-1'>${d.class}</td>
@@ -229,49 +260,58 @@ function loadAdminData(){
       <td class='border px-2 py-1'>${d.category}</td>
       <td class='border px-2 py-1'>${d.events.join(', ')}</td>
       <td class='border px-2 py-1'>
-        <button class='bg-red-500 text-white px-2 py-1 rounded' onclick="removeRegistration('${d.grNo}')">Remove</button>
-      </td>`;
-      table.appendChild(tr);
-    }
-  });
+        <button class='bg-red-500 text-white px-2 py-1 rounded' onclick='removeRegistration(${idx})'>Remove</button>
+      </td>
+    </tr>`).join('');
 }
 
-function removeRegistration(gr){
-  if(confirm('Remove registration?')){
-    db.ref('registrations/'+gr).remove();
-  }
+function removeRegistration(idx){
+  const data=JSON.parse(localStorage.getItem('registrations')||'[]');
+  if(!confirm(`Remove registration of ${data[idx].name}?`)) return;
+  const removedGR=data[idx].grNo;
+  data.splice(idx,1);
+  localStorage.setItem('registrations',JSON.stringify(data));
+  const grSet=new Set(JSON.parse(localStorage.getItem('registeredGRs')||'[]'));
+  grSet.delete(removedGR);
+  localStorage.setItem('registeredGRs',JSON.stringify(Array.from(grSet)));
+  loadAdminData();
 }
 
-// -------------------- BACK BUTTON --------------------
-document.getElementById('backToRegistration').addEventListener('click', ()=>{
+// Back to registration
+document.getElementById('backToRegistration').addEventListener('click',()=>{
   document.getElementById('adminPanel').classList.add('hidden');
   document.getElementById('mainContainer').classList.remove('hidden');
 });
 
-// -------------------- PDF GENERATION --------------------
-function generatePDF(data){
-  const content=document.createElement('div');
-  content.style.padding='20px'; content.style.fontFamily='Arial,sans-serif'; content.style.fontSize='12px'; content.style.lineHeight='1.5';
-  content.innerHTML=`
-    <div style="text-align:center; font-weight:bold; font-size:16px;">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C- ABU DHBAI</div>
-    <div style="text-align:center; font-weight:bold; font-size:14px; margin-bottom:15px;">ANNUAL SPORTS MEET 2025-2026</div>
-    <p>Dear Parents,</p>
-    <p>Greetings!</p>
-    <p>Dates: 26th & 27th Nov 2025, 8th Dec 2025</p>
-    <p><strong>Full name:</strong> ${data.name}</p>
-    <p><strong>Class:</strong> ${data.class}</p>
-    <p><strong>Division:</strong> ${data.division}</p>
-    <p><strong>DOB:</strong> ${data.dob}</p>
-    <p><strong>GR No:</strong> ${data.grNo}</p>
-    <p><strong>House:</strong> ${data.house}</p>
-    <p><strong>Category:</strong> ${data.category}</p>
-    <ul style="margin-left:20px;">
-      ${data.events.map(e=>`<li>${e}</li>`).join('')}
-    </ul>
-    <p><strong>Allow / Don’t Allow:</strong> ____________________</p>
-  `;
-  html2pdf().set({margin:[10,10,10,10],filename:`${data.name}_SportsMeet2025.pdf`,html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(content).save();
-}
+// Export CSV
+document.getElementById('exportCSV').addEventListener('click',()=>{
+  const data=JSON.parse(localStorage.getItem('registrations')||'[]');
+  if(data.length===0){alert('No registrations found.');return;}
+  const csvRows=[['Name','GR No','Class','Division','House','Category','Events'],...data.map(d=>[d.name,d.grNo,d.class,d.division,d.house,d.category,d.events.join('; ')])];
+  const csvContent=csvRows.map(e=>e.join(',')).join('\n');
+  const blob=new Blob([csvContent],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='SportsMeet2025_Registrations.csv'; a.click(); URL.revokeObjectURL(url);
+});
+
+// Filter events dropdown
+document.getElementById('filterCategory').addEventListener('change',e=>{
+  const cat=e.target.value;
+  const eventSelect=document.getElementById('filterEvent');
+  eventSelect.innerHTML='<option value="">Select Event</option>';
+  if(eventsByCategory[cat]) eventsByCategory[cat].forEach(ev=>{eventSelect.innerHTML+=`<option value="${ev}">${ev}</option>`;});
+});
+
+// Filtered PDF download
+document.getElementById('downloadFilteredPDF').addEventListener('click',()=>{
+  const cat=document.getElementById('filterCategory').value;
+  const ev=document.getElementById('filterEvent').value;
+  let data=JSON.parse(localStorage.getItem('registrations')||'[]');
+  if(cat) data=data.filter(d=>d.category===cat);
+  if(ev) data=data.filter(d=>d.events.includes(ev));
+  if(data.length===0){alert('No students found for this filter.'); return;}
+  data.forEach(generatePDF);
+});
 </script>
 </body>
 </html>
