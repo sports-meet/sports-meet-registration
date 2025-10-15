@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sunrise Sports Meet Registration</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
@@ -104,28 +102,27 @@
 </div>
 
 <script>
-/* ===== FIREBASE SETUP ===== */
-// !!! IMPORTANT: REPLACE THESE PLACEHOLDERS WITH YOUR ACTUAL FIREBASE CONFIGURATION !!!
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // <--- REPLACE THIS
-  authDomain: "YOUR_AUTH_DOMAIN", // <--- REPLACE THIS
-  projectId: "YOUR_PROJECT_ID", // <--- REPLACE THIS
-  storageBucket: "YOUR_BUCKET", // <--- REPLACE THIS
-  messagingSenderId: "YOUR_MSG_ID", // <--- REPLACE THIS
-  appId: "YOUR_APP_ID" // <--- REPLACE THIS
-};
 
-// Check if config is still default
-if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-  console.error("FATAL ERROR: Firebase configuration is missing. Submissions will fail.");
-} else {
-    // Initialize Firebase only if the config is not the placeholder
-    firebase.initializeApp(firebaseConfig);
+/* ===== LOCAL STORAGE UTILITY FUNCTIONS ===== */
+// Function to get all registrations from Local Storage
+function getRegistrations() {
+  const data = localStorage.getItem('sportsRegistrations');
+  return data ? JSON.parse(data) : {};
 }
 
-const db = firebase.firestore();
+// Function to save all registrations to Local Storage
+function saveRegistrations(registrations) {
+  localStorage.setItem('sportsRegistrations', JSON.stringify(registrations));
+}
 
-/* ===== CATEGORIES & EVENTS (NO CHANGE NEEDED HERE) ===== */
+// Function to delete a registration by GR No
+function deleteRegistration(grNo) {
+  const registrations = getRegistrations();
+  delete registrations[grNo];
+  saveRegistrations(registrations);
+}
+
+/* ===== CATEGORIES & EVENTS (NO CHANGE) ===== */
 const categories=[
 {name:'Sub Junior',limit:2,min:new Date('2017-01-01')},
 {name:'Junior',limit:3,min:new Date('2015-01-01')},
@@ -148,7 +145,7 @@ const eventsSection=document.getElementById('eventsSection');
 const eventList=document.getElementById('eventList');
 const eventNote=document.getElementById('eventNote');
 
-/* ===== DETERMINE CATEGORY (NO CHANGE NEEDED HERE) ===== */
+/* ===== DETERMINE CATEGORY (NO CHANGE) ===== */
 function getCategory(dob){
   const parts=dob.split('-');
   const birthDate=new Date(parts[0],parts[1]-1,parts[2]);
@@ -156,7 +153,7 @@ function getCategory(dob){
   return 'Super Senior';
 }
 
-/* ===== UPDATE EVENTS (NO CHANGE NEEDED HERE) ===== */
+/* ===== UPDATE EVENTS (NO CHANGE) ===== */
 dobInput.addEventListener('change',()=>{
   const cat=getCategory(dobInput.value);
   categoryField.value=cat;
@@ -179,16 +176,9 @@ dobInput.addEventListener('change',()=>{
   });
 });
 
-/* ===== SUBMIT REGISTRATION (MINOR ADDITION) ===== */
+/* ===== SUBMIT REGISTRATION (UPDATED FOR LOCAL STORAGE) ===== */
 document.getElementById('sportsForm').addEventListener('submit',async(e)=>{
   e.preventDefault();
-  
-  // Add a quick check for the Firebase config
-  if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-    alert("FATAL ERROR: Please update the Firebase configuration in the script section to enable submission.");
-    return;
-  }
-
   const name=document.getElementById('name').value.trim();
   const grNo=document.getElementById('grNo').value.trim();
   const classV=document.getElementById('class').value.trim();
@@ -201,27 +191,39 @@ document.getElementById('sportsForm').addEventListener('submit',async(e)=>{
   if(!name || !grNo || !classV || !division || !house || !dob || selectedEvents.length===0){
     alert('Please fill all fields and select events.'); return;
   }
-
+  
   try {
-    // The issue is likely here, because 'db' isn't properly set up without valid config.
-    await db.collection('registrations').doc(grNo).set({
-      name,grNo,class:classV,division,house,dob,category,events:selectedEvents,timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
+    // 1. Get existing data
+    const registrations = getRegistrations();
     
-    // Added GR No to the object for clarity, though it's used as the doc ID.
-    // Fixed the original registration object to include 'grNo' for admin panel use if doc ID is not directly retrieved.
+    // 2. Check for duplicate GR No.
+    if (registrations[grNo]) {
+      alert(`Registration with GR No ${grNo} already exists.`);
+      return;
+    }
+
+    // 3. Prepare new data object
+    const newRegistration = {
+      name, class: classV, division, house, dob, category, 
+      events: selectedEvents, timestamp: new Date().toISOString()
+    };
+    
+    // 4. Save to Local Storage
+    registrations[grNo] = newRegistration;
+    saveRegistrations(registrations);
+
     alert('Registration successful! PDF will download.');
-    generatePDF({name,grNo,class:classV,division,house,dob,category,events:selectedEvents});
+    generatePDF({name, grNo, class: classV, division, house, dob, category, events: selectedEvents});
     document.getElementById('sportsForm').reset();
     categoryField.value=''; eventsSection.classList.add('hidden');
+
   } catch(err){
-    console.error('Submission Error:', err); 
-    // This alert will now catch the Firebase error if the config is bad, or a Firestore rule error.
-    alert('Error submitting registration. Check the console for details and ensure Firebase is configured.'); 
+    console.error('Error submitting registration:', err); 
+    alert('Error submitting registration. Check the console.'); 
   }
 });
 
-/* ===== GENERATE PDF (NO CHANGE NEEDED HERE) ===== */
+/* ===== GENERATE PDF (NO CHANGE) ===== */
 function generatePDF(data){
   const content=document.createElement('div');
   content.style.padding='20px';
@@ -244,13 +246,13 @@ function generatePDF(data){
   html2pdf().set({margin:10,filename:`${data.name}_SportsMeet2025.pdf`,html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(content).save();
 }
 
-/* ===== ADMIN PANEL (NO CHANGE NEEDED HERE) ===== */
+/* ===== ADMIN PANEL (NO CHANGE) ===== */
 document.getElementById('backToRegistration').addEventListener('click',()=>{
   document.getElementById('adminPanel').classList.add('hidden');
   document.getElementById('mainContainer').classList.remove('hidden');
 });
 
-/* ===== ADMIN ACCESS BUTTON (NO CHANGE NEEDED HERE) ===== */
+/* ===== ADMIN ACCESS BUTTON (NO CHANGE) ===== */
 const adminBtn=document.createElement('button');
 adminBtn.textContent="Admin Panel";
 adminBtn.className="fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg z-50";
@@ -263,39 +265,44 @@ adminBtn.addEventListener('click',async()=>{
   loadAdminData();
 });
 
-/* ===== LOAD ADMIN DATA (NO CHANGE NEEDED HERE) ===== */
-async function loadAdminData(){
-  // Prevent loading if Firebase is not initialized
-  if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-    alert("Cannot load admin data: Firebase is not configured.");
-    return;
-  }
-  
-  const snapshot=await db.collection('registrations').orderBy('timestamp','desc').get();
-  const data=snapshot.docs.map(doc=>doc.data());
-  const ids=snapshot.docs.map(doc=>doc.id);
+/* ===== LOAD ADMIN DATA (UPDATED FOR LOCAL STORAGE) ===== */
+function loadAdminData(){
+  const registrations = getRegistrations();
+  // Convert object of registrations into an array for sorting/display
+  const dataArray = Object.keys(registrations).map(grNo => ({
+    grNo: grNo,
+    ...registrations[grNo]
+  }));
+
+  // Sort by timestamp (newest first)
+  dataArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
   const table=document.getElementById('adminTable');
   table.innerHTML='';
-  data.forEach((d,i)=>{
+
+  dataArray.forEach((d)=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td class='border px-2 py-1'>${d.name}</td>
-      <td class='border px-2 py-1'>${ids[i]}</td>
+      <td class='border px-2 py-1'>${d.grNo}</td>
       <td class='border px-2 py-1'>${d.class}</td>
       <td class='border px-2 py-1'>${d.division}</td>
       <td class='border px-2 py-1'>${d.house}</td>
       <td class='border px-2 py-1'>${d.category}</td>
       <td class='border px-2 py-1'>${d.events.join(', ')}</td>
       <td class='border px-2 py-1'>
-        <button class='bg-red-500 text-white px-2 py-1 rounded'>Remove</button>
+        <button data-gr="${d.grNo}" class='removeBtn bg-red-500 text-white px-2 py-1 rounded'>Remove</button>
       </td>
     `;
-    tr.querySelector('button').addEventListener('click',async()=>{
-      if(confirm(`Remove ${d.name}?`)){
-        await db.collection('registrations').doc(ids[i]).delete();
-        loadAdminData();
+    // Attach event listener for the remove button
+    tr.querySelector('.removeBtn').addEventListener('click', () => {
+      const grToRemove = d.grNo;
+      if(confirm(`Remove registration for ${d.name} (GR No: ${grToRemove})?`)){
+        deleteRegistration(grToRemove);
+        loadAdminData(); // Reload table after deletion
       }
     });
+
     table.appendChild(tr);
   });
 }
