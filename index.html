@@ -4,11 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sunrise Sports Meet Registration</title>
+<!-- Modern Modular Firebase SDK (v10+) via CDN -->
+<script type="module" src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js"></script>
+<!-- Library for PDF generation -->
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+<!-- Tailwind CSS -->
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-r from-indigo-50 to-blue-100 min-h-screen font-sans">
 
+<!-- Registration Form -->
 <div id="mainContainer" class="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl mt-10 p-8 border border-blue-200">
   <h1 class="text-4xl font-bold text-center text-indigo-700 mb-2">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C- ABU DHBAI</h1>
   <h2 class="text-lg font-bold text-center text-gray-700 mb-6">ANNUAL SPORTS MEET 2025–2026 Registration</h2>
@@ -63,6 +69,7 @@
   </form>
 </div>
 
+<!-- Admin Panel -->
 <div id="adminPanel" class="hidden max-w-5xl mx-auto mt-10 bg-white p-6 rounded-2xl shadow-lg">
   <h2 class="text-2xl font-bold text-indigo-700 mb-4 text-center">Admin Panel - Sports Meet 2025</h2>
   <div class="flex flex-wrap gap-2 mb-4">
@@ -101,26 +108,38 @@
   </div>
 </div>
 
-<script>
+<!-- Main Script Block using ES Modules -->
+<script type="module">
+// Import all necessary modular functions from Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  getDoc, 
+  setDoc, 
+  deleteDoc, 
+  getDocs, 
+  query, 
+  orderBy, 
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-/* ===== LOCAL STORAGE UTILITY FUNCTIONS ===== */
-// Function to get all registrations from Local Storage
-function getRegistrations() {
-  const data = localStorage.getItem('sportsRegistrations');
-  return data ? JSON.parse(data) : {};
-}
+/* ===== FIREBASE SETUP - USING YOUR CONFIG ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyC-axJOwivMy-bGhNmVIHaXORcG90gLA9g",
+  authDomain: "registration-c78dc.firebaseapp.com",
+  projectId: "registration-c78dc",
+  storageBucket: "registration-c78dc.firebasestorage.app",
+  messagingSenderId: "368136278543",
+  appId: "1:368136278543:web:03a46a62d1095f40a0497a",
+  measurementId: "G-14V6C8VSCH"
+};
 
-// Function to save all registrations to Local Storage
-function saveRegistrations(registrations) {
-  localStorage.setItem('sportsRegistrations', JSON.stringify(registrations));
-}
-
-// Function to delete a registration by GR No
-function deleteRegistration(grNo) {
-  const registrations = getRegistrations();
-  delete registrations[grNo];
-  saveRegistrations(registrations);
-}
+// Initialize Firebase App and Firestore Database
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const REGISTRATIONS_COLLECTION = "registrations";
 
 /* ===== CATEGORIES & EVENTS (NO CHANGE) ===== */
 const categories=[
@@ -170,15 +189,18 @@ dobInput.addEventListener('change',()=>{
   document.querySelectorAll('.eventCheck').forEach(chk=>{
     chk.addEventListener('change',()=>{
       if(document.querySelectorAll('.eventCheck:checked').length>limit){
-        chk.checked=false; alert(`You can select only ${limit} events.`);
+        chk.checked=false; 
+        // Using custom UI alert instead of native alert()
+        showMessage(`You can select only ${limit} events.`, 'error');
       }
     });
   });
 });
 
-/* ===== SUBMIT REGISTRATION (UPDATED FOR LOCAL STORAGE) ===== */
+/* ===== SUBMIT REGISTRATION (UPDATED FOR FIREBASE V10) ===== */
 document.getElementById('sportsForm').addEventListener('submit',async(e)=>{
   e.preventDefault();
+
   const name=document.getElementById('name').value.trim();
   const grNo=document.getElementById('grNo').value.trim();
   const classV=document.getElementById('class').value.trim();
@@ -189,37 +211,49 @@ document.getElementById('sportsForm').addEventListener('submit',async(e)=>{
   const selectedEvents=Array.from(document.querySelectorAll('.eventCheck:checked')).map(e=>e.value);
 
   if(!name || !grNo || !classV || !division || !house || !dob || selectedEvents.length===0){
-    alert('Please fill all fields and select events.'); return;
+    showMessage('Please fill all fields and select events.', 'warning');
+    return;
   }
-  
+    
   try {
-    // 1. Get existing data
-    const registrations = getRegistrations();
-    
-    // 2. Check for duplicate GR No.
-    if (registrations[grNo]) {
-      alert(`Registration with GR No ${grNo} already exists.`);
+    // Reference to the document using GR No as the document ID
+    const regDocRef = doc(db, REGISTRATIONS_COLLECTION, grNo);
+    const docSnap = await getDoc(regDocRef);
+
+    // Check for duplicate GR No (prevention)
+    if (docSnap.exists()) {
+      showMessage(`A registration for GR No ${grNo} already exists.`, 'error');
       return;
     }
 
-    // 3. Prepare new data object
-    const newRegistration = {
-      name, class: classV, division, house, dob, category, 
-      events: selectedEvents, timestamp: new Date().toISOString()
-    };
-    
-    // 4. Save to Local Storage
-    registrations[grNo] = newRegistration;
-    saveRegistrations(registrations);
+    // Save data to Firestore
+    await setDoc(regDocRef, {
+      name,
+      grNo,
+      class: classV,
+      division,
+      house,
+      dob,
+      category,
+      events: selectedEvents,
+      timestamp: serverTimestamp() // Use server timestamp for accurate sorting
+    });
 
-    alert('Registration successful! PDF will download.');
+    showMessage('Registration successful! PDF will download.', 'success');
+    
+    // Generate PDF with submitted data
     generatePDF({name, grNo, class: classV, division, house, dob, category, events: selectedEvents});
+    
+    // Reset form
     document.getElementById('sportsForm').reset();
-    categoryField.value=''; eventsSection.classList.add('hidden');
+    categoryField.value=''; 
+    eventsSection.classList.add('hidden');
+    document.querySelectorAll('.eventCheck').forEach(chk => chk.checked = false); // Ensure checkboxes are cleared
+    loadAdminData(); // Refresh admin panel if open
 
   } catch(err){
-    console.error('Error submitting registration:', err); 
-    alert('Error submitting registration. Check the console.'); 
+    console.error('Submission Error:', err); 
+    showMessage('Error submitting registration. Check the console and ensure Firebase Rules are set to public for testing.', 'error'); 
   }
 });
 
@@ -246,65 +280,171 @@ function generatePDF(data){
   html2pdf().set({margin:10,filename:`${data.name}_SportsMeet2025.pdf`,html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(content).save();
 }
 
-/* ===== ADMIN PANEL (NO CHANGE) ===== */
+/* ===== ADMIN PANEL ACCESS (NO CHANGE) ===== */
 document.getElementById('backToRegistration').addEventListener('click',()=>{
   document.getElementById('adminPanel').classList.add('hidden');
   document.getElementById('mainContainer').classList.remove('hidden');
 });
 
-/* ===== ADMIN ACCESS BUTTON (NO CHANGE) ===== */
 const adminBtn=document.createElement('button');
 adminBtn.textContent="Admin Panel";
-adminBtn.className="fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg z-50";
+adminBtn.className="fixed bottom-4 right-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-xl transition duration-150 ease-in-out z-50";
 document.body.appendChild(adminBtn);
+
 adminBtn.addEventListener('click',async()=>{
   const pass=prompt('Enter admin password:');
-  if(pass!=="SUN2025"){alert('Incorrect password.'); return;}
+  if(pass!=="SUN2025"){ showMessage('Incorrect password.', 'error'); return;}
   document.getElementById('mainContainer').classList.add('hidden');
   document.getElementById('adminPanel').classList.remove('hidden');
-  loadAdminData();
+  await loadAdminData();
 });
 
-/* ===== LOAD ADMIN DATA (UPDATED FOR LOCAL STORAGE) ===== */
-function loadAdminData(){
-  const registrations = getRegistrations();
-  // Convert object of registrations into an array for sorting/display
-  const dataArray = Object.keys(registrations).map(grNo => ({
-    grNo: grNo,
-    ...registrations[grNo]
-  }));
+/* ===== LOAD ADMIN DATA (UPDATED FOR FIREBASE V10) ===== */
+async function loadAdminData(){
+  try {
+      // Create a query to get all documents, ordered by timestamp (newest first)
+      const q = query(collection(db, REGISTRATIONS_COLLECTION), orderBy("timestamp", "desc"));
+      const querySnapshot = await getDocs(q);
+      
+      const data = [];
+      querySnapshot.forEach((doc) => {
+        data.push(doc.data());
+      });
+      
+      const table=document.getElementById('adminTable');
+      table.innerHTML='';
 
-  // Sort by timestamp (newest first)
-  dataArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
-  const table=document.getElementById('adminTable');
-  table.innerHTML='';
+      data.forEach((d)=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML=`
+            <td class='border px-2 py-1'>${d.name}</td>
+            <td class='border px-2 py-1'>${d.grNo}</td>
+            <td class='border px-2 py-1'>${d.class}</td>
+            <td class='border px-2 py-1'>${d.division}</td>
+            <td class='border px-2 py-1'>${d.house}</td>
+            <td class='border px-2 py-1'>${d.category}</td>
+            <td class='border px-2 py-1'>${d.events.join(', ')}</td>
+            <td class='border px-2 py-1'>
+              <button data-gr="${d.grNo}" class='removeBtn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs'>Remove</button>
+            </td>
+          `;
+          // Remove button logic (UPDATED FOR FIREBASE V10)
+          tr.querySelector('.removeBtn').addEventListener('click',async(e)=>{
+              const grToRemove = e.target.getAttribute('data-gr');
+              if(window.confirm(`Remove registration for ${d.name} (GR No: ${grToRemove})?`)){
+                  await deleteDoc(doc(db, REGISTRATIONS_COLLECTION, grToRemove));
+                  loadAdminData(); // Reload table after deletion
+                  showMessage(`Registration for GR No ${grToRemove} removed.`, 'success');
+              }
+          });
 
-  dataArray.forEach((d)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td class='border px-2 py-1'>${d.name}</td>
-      <td class='border px-2 py-1'>${d.grNo}</td>
-      <td class='border px-2 py-1'>${d.class}</td>
-      <td class='border px-2 py-1'>${d.division}</td>
-      <td class='border px-2 py-1'>${d.house}</td>
-      <td class='border px-2 py-1'>${d.category}</td>
-      <td class='border px-2 py-1'>${d.events.join(', ')}</td>
-      <td class='border px-2 py-1'>
-        <button data-gr="${d.grNo}" class='removeBtn bg-red-500 text-white px-2 py-1 rounded'>Remove</button>
-      </td>
-    `;
-    // Attach event listener for the remove button
-    tr.querySelector('.removeBtn').addEventListener('click', () => {
-      const grToRemove = d.grNo;
-      if(confirm(`Remove registration for ${d.name} (GR No: ${grToRemove})?`)){
-        deleteRegistration(grToRemove);
-        loadAdminData(); // Reload table after deletion
-      }
+          table.appendChild(tr);
+      });
+
+      populateFilters(data);
+
+  } catch (err) {
+      console.error("Error loading admin data:", err);
+      showMessage("Could not load data. Check console and ensure Firebase Rules permit reading.", 'error');
+    }
+}
+
+// Helper function to populate event filters (NO CHANGE)
+function populateFilters(data) {
+    const filterEvent = document.getElementById('filterEvent');
+    filterEvent.innerHTML = '<option value="">Select Event</option>';
+    const eventSet = new Set();
+    data.forEach(d => d.events.forEach(e => eventSet.add(e)));
+    
+    Array.from(eventSet).sort().forEach(event => {
+        const option = document.createElement('option');
+        option.value = event;
+        option.textContent = event;
+        filterEvent.appendChild(option);
     });
+}
 
-    table.appendChild(tr);
-  });
+
+// Event listeners for filtering and downloading (NO CHANGE in logic)
+document.getElementById('filterCategory').addEventListener('change', loadAdminData);
+document.getElementById('filterEvent').addEventListener('change', loadAdminData);
+document.getElementById('exportCSV').addEventListener('click', exportCSV);
+document.getElementById('downloadFilteredPDF').addEventListener('click', downloadFilteredPDF);
+
+
+// CSV Export function (NO CHANGE in logic)
+function exportCSV() {
+    const table = document.getElementById('adminTable');
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+
+    for (const row of rows) {
+        const cells = row.querySelectorAll('th, td');
+        const rowData = Array.from(cells).map(cell => {
+            // Remove the 'Remove' button text
+            if (cell.querySelector('button')) return ''; 
+            // Escape commas in cell data
+            let data = cell.innerText.replace(/"/g, '""');
+            return `"${data}"`;
+        }).filter(d => d !== ''); // Filter out empty cells (from 'Action' column)
+        csv.push(rowData.join(','));
+    }
+
+    const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const downloadLink = document.createElement('a');
+    downloadLink.download = 'sports_registrations.csv';
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = 'none';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+}
+
+// PDF Download function for current table view (NO CHANGE in logic)
+function downloadFilteredPDF() {
+    const table = document.getElementById('adminTable');
+    
+    // Create a printable div with the header
+    const content = document.createElement('div');
+    content.innerHTML = `
+        <h2 style="text-align:center;font-weight:bold;">SUNRISE SPORTS MEET REGISTRATIONS (FILTERED)</h2>
+    `;
+    
+    // Clone the table for the PDF
+    const tableClone = table.parentNode.cloneNode(true);
+    tableClone.style.fontSize = '10px';
+    
+    // Remove the 'Action' column from the cloned table
+    tableClone.querySelectorAll('th:last-child, td:last-child').forEach(el => el.remove());
+
+    content.appendChild(tableClone);
+
+    html2pdf().set({
+        margin: 10,
+        filename: 'sports_registrations_filtered.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } // Landscape is better for tables
+    }).from(content).save();
+}
+
+/* ===== CUSTOM MESSAGE BOX (Replacing alert/confirm) ===== */
+function showMessage(message, type) {
+    let color = '';
+    switch (type) {
+        case 'success': color = 'bg-green-500'; break;
+        case 'error': color = 'bg-red-500'; break;
+        case 'warning': color = 'bg-yellow-500'; break;
+        default: color = 'bg-blue-500';
+    }
+
+    const msgBox = document.createElement('div');
+    msgBox.className = `fixed top-5 left-1/2 transform -translate-x-1/2 p-3 rounded-lg text-white font-bold shadow-2xl ${color} transition-opacity duration-300`;
+    msgBox.textContent = message;
+    document.body.appendChild(msgBox);
+
+    setTimeout(() => {
+        msgBox.style.opacity = 0;
+        setTimeout(() => msgBox.remove(), 300);
+    }, 3000);
 }
 </script>
 </body>
