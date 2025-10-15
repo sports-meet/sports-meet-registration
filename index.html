@@ -12,25 +12,28 @@
 
 /* Styling for inputs and selects for a modern look */
 .app-input {
-    @apply mt-1 block w-full border border-gray-200 rounded-xl shadow-inner p-3 text-gray-800 transition duration-150 focus:ring-indigo-500 focus:border-indigo-500;
+    /* Larger padding, dark text, subtle shadow, and sharp focus */
+    @apply mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3.5 text-lg text-gray-800 transition duration-150 focus:ring-sky-500 focus:border-sky-500;
 }
 
 .app-button {
-    @apply font-semibold px-6 py-3 rounded-xl shadow-lg transform hover:scale-[1.01] transition duration-200 ease-in-out;
+    /* Bold, modern button style with smooth hover */
+    @apply font-bold text-lg px-8 py-3 rounded-xl shadow-lg transform hover:scale-[1.01] transition duration-200 ease-in-out;
 }
 
-/* Ensure the date input icon is visible */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(0.2);
+/* Hide the default date picker icon for text input on all platforms */
+input[type="text"][id="dob"]::-webkit-calendar-picker-indicator {
+    display: none !important;
 }
 
+/* Modal Styling */
 .modal-overlay {
-    background-color: rgba(0, 0, 0, 0.7); /* Darker overlay */
+    background-color: rgba(0, 0, 0, 0.8); /* Very dark overlay for impact */
 }
 
-/* Style for alternating table rows */
+/* Ensure the admin panel table looks great */
 #adminTable tr:nth-child(even) {
-    background-color: #f7f7f9;
+    background-color: #f3f4f6;
 }
 </style>
 <!-- Modern Modular Firebase SDK (v10+) via CDN -->
@@ -39,13 +42,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 <!-- Library for PDF generation -->
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 </head>
-<body class="bg-slate-100 min-h-screen font-sans p-4 sm:p-8">
+<!-- Full screen layout on desktop, standard layout on mobile -->
+<body class="bg-gray-50 min-h-screen font-sans p-0 sm:p-4 md:p-8 flex justify-center items-center">
 
 <!-- Confirmation/Alert Modal Structure (Hidden by default) -->
 <div id="confirmationModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay">
-    <div class="bg-white rounded-2xl p-6 sm:p-8 w-11/12 max-w-lg shadow-2xl transition duration-300 transform scale-100 border border-gray-200">
-        <h3 id="modalTitle" class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Confirm Action</h3>
-        <p id="modalMessage" class="text-gray-600 mb-6"></p>
+    <div class="bg-white rounded-3xl p-8 w-11/12 max-w-md shadow-2xl transition duration-300 transform scale-100 border border-gray-200">
+        <h3 id="modalTitle" class="text-2xl font-extrabold text-sky-700 mb-4 border-b pb-2">Confirm Action</h3>
+        <p id="modalMessage" class="text-gray-700 mb-6"></p>
         <div class="flex justify-end space-x-3">
             <button id="modalCancelBtn" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition shadow-md">Cancel</button>
             <button id="modalConfirmBtn" class="px-5 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition shadow-md">Confirm</button>
@@ -54,113 +58,123 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 </div>
 
 <!-- Registration Form -->
-<div id="mainContainer" class="max-w-lg mx-auto bg-white shadow-2xl rounded-3xl p-6 sm:p-10 border border-indigo-200">
-  <header class="text-center mb-8">
-    <h1 class="text-4xl sm:text-5xl font-extrabold text-indigo-700 leading-tight">Sunrise Sports Meet</h1>
-    <h2 class="text-lg text-gray-500 mt-2 font-light">Annual Registration 2025–2026</h2>
-  </header>
+<!-- Full height and full width on medium screens and up, fixed width on mobile -->
+<div id="mainContainer" class="w-full max-w-6xl md:h-[90vh] mx-auto flex items-center justify-center">
+    <div class="w-full max-w-xl bg-white shadow-2xl rounded-3xl p-6 sm:p-10 border-4 border-sky-100/50">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-sky-700 leading-tight">Sunrise Sports Meet</h1>
+            <h2 class="text-xl text-gray-500 mt-2 font-light">Annual Registration 2025–2026</h2>
+        </header>
 
-  <form id="sportsForm" class="space-y-6">
-    <!-- Full Name (Standalone for better layout control) -->
-    <div>
-        <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-        <input type="text" id="name" class="app-input" required>
+        <form id="sportsForm" class="space-y-6">
+            <!-- Full Name (Standalone) -->
+            <div>
+                <label for="name" class="block text-sm font-semibold text-gray-700">Full Name</label>
+                <input type="text" id="name" class="app-input" required>
+            </div>
+
+            <!-- Two-Column Grid for the rest of the fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
+                <!-- GR Number -->
+                <div>
+                    <label for="grNo" class="block text-sm font-semibold text-gray-700">GR Number (5 digits)</label>
+                    <input type="text" id="grNo" maxlength="5" pattern="\d{5}" class="app-input" required>
+                </div>
+                <!-- Class -->
+                <div>
+                    <label for="class" class="block text-sm font-semibold text-gray-700">Class</label>
+                    <input type="text" id="class" class="app-input" required>
+                </div>
+                <!-- Division -->
+                <div>
+                    <label for="division" class="block text-sm font-semibold text-gray-700">Division</label>
+                    <input type="text" id="division" class="app-input" required>
+                </div>
+                <!-- Sports House -->
+                <div>
+                    <label for="house" class="block text-sm font-semibold text-gray-700">Sports House</label>
+                    <select id="house" class="app-input appearance-none bg-white" required>
+                        <option value="" disabled selected>Select House</option>
+                        <option value="Ruby">Ruby</option>
+                        <option value="Sapphire">Sapphire</option>
+                        <option value="Topaz">Topaz</option>
+                        <option value="Emerald">Emerald</option>
+                    </select>
+                </div>
+            
+                <!-- DOB (Text Input as requested) -->
+                <div>
+                    <label for="dob" class="block text-sm font-semibold text-gray-700">Date of Birth (YYYY-MM-DD)</label>
+                    <!-- Changed to type="text" and added pattern for validation -->
+                    <input type="text" id="dob" class="app-input" 
+                        placeholder="YYYY-MM-DD" 
+                        pattern="\d{4}-\d{2}-\d{2}" 
+                        title="Enter date in YYYY-MM-DD format (e.g., 2010-01-25)" 
+                        required>
+                </div>
+                <!-- Category (Readonly) -->
+                <div>
+                    <label for="category" class="block text-sm font-semibold text-gray-700">Calculated Category</label>
+                    <input type="text" id="category" class="app-input bg-sky-50 text-sky-700 font-bold" readonly placeholder="Enter DOB to calculate">
+                </div>
+            </div>
+
+            <!-- Events Selection -->
+            <div id="eventsSection" class="hidden mt-8 p-4 sm:p-6 border-2 border-dashed border-sky-300 rounded-xl bg-sky-50/70 shadow-inner">
+                <label class="block text-lg font-bold text-sky-800 mb-3">Select Events</label>
+                <div id="eventList" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+                <p id="eventNote" class="text-sm text-sky-600 mt-4 font-medium"></p>
+            </div>
+
+            <button type="submit" class="app-button mt-10 bg-sky-600 hover:bg-sky-700 text-white w-full">
+                Submit Registration
+            </button>
+        </form>
     </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-      <!-- GR Number -->
-      <div>
-        <label for="grNo" class="block text-sm font-medium text-gray-700">GR Number (5 digits)</label>
-        <input type="text" id="grNo" maxlength="5" pattern="\d{5}" class="app-input" required>
-      </div>
-      <!-- Class -->
-      <div>
-        <label for="class" class="block text-sm font-medium text-gray-700">Class</label>
-        <input type="text" id="class" class="app-input" required>
-      </div>
-      <!-- Division -->
-      <div>
-        <label for="division" class="block text-sm font-medium text-gray-700">Division</label>
-        <input type="text" id="division" class="app-input" required>
-      </div>
-      <!-- Sports House -->
-      <div>
-        <label for="house" class="block text-sm font-medium text-gray-700">Sports House</label>
-        <select id="house" class="app-input" required>
-          <option value="" disabled selected>Select House</option>
-          <option value="Ruby">Ruby</option>
-          <option value="Sapphire">Sapphire</option>
-          <option value="Topaz">Topaz</option>
-          <option value="Emerald">Emerald</option>
-        </select>
-      </div>
-    
-      <!-- DOB and Category -->
-      <div>
-        <label for="dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
-        <input type="date" id="dob" class="app-input" required>
-      </div>
-      <div>
-        <label for="category" class="block text-sm font-medium text-gray-700">Calculated Category</label>
-        <input type="text" id="category" class="app-input bg-indigo-50 text-indigo-700 font-semibold" readonly placeholder="Enter DOB to calculate">
-      </div>
-    </div>
-
-    <!-- Events Selection -->
-    <div id="eventsSection" class="hidden p-4 sm:p-6 border-2 border-dashed border-indigo-300 rounded-xl bg-indigo-50/70 shadow-inner">
-      <label class="block text-lg font-bold text-indigo-800 mb-3">Select Events</label>
-      <div id="eventList" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
-      <p id="eventNote" class="text-sm text-indigo-600 mt-4 font-medium"></p>
-    </div>
-
-    <button type="submit" class="app-button mt-8 bg-indigo-600 hover:bg-indigo-700 text-white w-full">
-      Submit Registration
-    </button>
-  </form>
 </div>
 
 <!-- Admin Panel -->
-<div id="adminPanel" class="hidden max-w-7xl mx-auto mt-10 bg-white p-6 sm:p-8 rounded-3xl shadow-2xl border border-red-200">
-  <h2 class="text-3xl sm:text-4xl font-extrabold text-red-700 mb-6 text-center">Admin Panel: Registrations (Real-Time)</h2>
-  
-  <div class="flex flex-wrap items-center gap-4 mb-6 p-4 bg-red-50 rounded-xl border border-red-200">
-    <label class="font-bold text-gray-700 mr-2 min-w-[70px]">Filters:</label>
-    
-    <!-- Filter Dropdowns -->
-    <select id="filterCategory" class="border p-2 rounded-xl shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
-      <option value="">All Categories</option>
-      <option value="Sub Junior">Sub Junior</option>
-      <option value="Junior">Junior</option>
-      <option value="Inter">Inter</option>
-      <option value="Senior">Senior</option>
-      <option value="Super Senior">Super Senior</option>
-    </select>
-    <select id="filterEvent" class="border p-2 rounded-xl shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
-      <option value="">All Events</option>
-    </select>
+<div id="adminPanel" class="hidden w-full max-w-7xl mx-auto mt-0 sm:mt-10 bg-white p-6 sm:p-8 rounded-3xl shadow-2xl border-4 border-red-100/50 min-h-screen">
+    <h2 class="text-3xl sm:text-4xl font-extrabold text-red-700 mb-6 text-center">Admin Panel: Registrations (Real-Time)</h2>
+    
+    <div class="flex flex-wrap items-center gap-4 mb-6 p-4 bg-red-50 rounded-xl border border-red-200">
+        <label class="font-bold text-gray-700 mr-2 min-w-[70px]">Filters:</label>
+        
+        <!-- Filter Dropdowns -->
+        <select id="filterCategory" class="border p-2 rounded-xl shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+            <option value="">All Categories</option>
+            <option value="Sub Junior">Sub Junior</option>
+            <option value="Junior">Junior</option>
+            <option value="Inter">Inter</option>
+            <option value="Senior">Senior</option>
+            <option value="Super Senior">Super Senior</option>
+        </select>
+        <select id="filterEvent" class="border p-2 rounded-xl shadow-sm focus:ring-red-500 focus:border-red-500 text-sm">
+            <option value="">All Events</option>
+        </select>
 
-    <!-- Export/Download Buttons -->
-    <button id="downloadFilteredPDF" class="app-button bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm shadow-md">Download PDF</button>
-    <button id="exportCSV" class="app-button bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm shadow-md">Export CSV</button>
-    <button id="backToRegistration" class="ml-auto app-button bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 text-sm shadow-md">Back to Form</button>
-  </div>
+        <!-- Export/Download Buttons -->
+        <button id="downloadFilteredPDF" class="app-button bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm shadow-md">Download PDF</button>
+        <button id="exportCSV" class="app-button bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm shadow-md">Export CSV</button>
+        <button id="backToRegistration" class="ml-auto app-button bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 text-sm shadow-md">Back to Form</button>
+    </div>
 
-  <div class="overflow-x-auto rounded-xl shadow-lg border border-gray-200">
-    <table class="min-w-full text-sm">
-      <thead class="bg-red-700 text-white uppercase tracking-wider">
-        <tr>
-          <th class="px-4 py-3 text-left">Name</th>
-          <th class="px-4 py-3 text-left">GR No</th>
-          <th class="px-4 py-3 text-left">Class/Div</th>
-          <th class="px-4 py-3 text-left">House</th>
-          <th class="px-4 py-3 text-left">Category</th>
-          <th class="px-4 py-3 text-left">Events</th>
-          <th class="px-4 py-3 text-center">Action</th>
-        </tr>
-      </thead>
-      <tbody id="adminTable" class="divide-y divide-gray-100 bg-white"></tbody>
-    </table>
-  </div>
+    <div class="overflow-x-auto rounded-xl shadow-lg border border-gray-200">
+        <table class="min-w-full text-sm">
+            <thead class="bg-red-700 text-white uppercase tracking-wider">
+                <tr>
+                    <th class="px-4 py-3 text-left">Name</th>
+                    <th class="px-4 py-3 text-left">GR No</th>
+                    <th class="px-4 py-3 text-left">Class/Div</th>
+                    <th class="px-4 py-3 text-left">House</th>
+                    <th class="px-4 py-3 text-left">Category</th>
+                    <th class="px-4 py-3 text-left">Events</th>
+                    <th class="px-4 py-3 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody id="adminTable" class="divide-y divide-gray-100 bg-white"></tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Floating Admin Access Button -->
@@ -297,11 +311,18 @@ function showConfirmation(title, message) {
 /* ===== REGISTRATION LOGIC ===== */
 
 /**
- * Determines the sports category based on DOB.
+ * Determines the sports category based on DOB (YYYY-MM-DD string format).
  */
-function getCategory(dob){
-  const parts=dob.split('-');
-  const birthDate=new Date(parts[0],parts[1]-1,parts[2]);
+function getCategory(dobString){
+  // Simple regex to ensure format is YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dobString)) {
+        return null; // Return null if format is invalid
+    }
+    const birthDate = new Date(dobString);
+    if (isNaN(birthDate.getTime())) {
+        return null; // Return null if date is invalid (e.g., 2020-99-99)
+    }
+
   for(let c of categories) if(birthDate>=c.min) return c.name;
   return 'Super Senior';
 }
@@ -309,13 +330,20 @@ function getCategory(dob){
 /**
  * Updates the category field and populates event checkboxes.
  */
-dobInput.addEventListener('change',()=>{
+dobInput.addEventListener('input',()=>{ // Changed to 'input' for real-time validation
   if (!dobInput.value) {
     categoryField.value = '';
     eventsSection.classList.add('hidden');
     return;
   }
   const cat=getCategory(dobInput.value);
+
+  if (cat === null) {
+      categoryField.value = 'Invalid Date Format (YYYY-MM-DD)';
+      eventsSection.classList.add('hidden');
+      return;
+  }
+
   categoryField.value=cat;
   eventsSection.classList.remove('hidden');
   eventList.innerHTML='';
@@ -327,8 +355,8 @@ dobInput.addEventListener('change',()=>{
   
   eventsByCategory[cat].forEach(ev=>{
     const label=document.createElement('label');
-    label.className='flex items-center space-x-3 text-gray-700 cursor-pointer p-2 rounded-lg transition duration-100 hover:bg-indigo-100/50';
-    label.innerHTML=`<input type='checkbox' value='${ev}' class='eventCheck h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500'> <span class="text-sm font-medium">${ev}</span>`;
+    label.className='flex items-center space-x-3 text-gray-700 cursor-pointer p-2 rounded-lg transition duration-100 hover:bg-sky-100/50';
+    label.innerHTML=`<input type='checkbox' value='${ev}' class='eventCheck h-5 w-5 text-sky-600 border-gray-300 rounded-md focus:ring-sky-500'> <span class="text-base font-medium">${ev}</span>`;
     eventList.appendChild(label);
   });
   
@@ -357,8 +385,14 @@ document.getElementById('sportsForm').addEventListener('submit',async(e)=>{
   const category=categoryField.value;
   const selectedEvents=Array.from(document.querySelectorAll('.eventCheck:checked')).map(e=>e.value);
 
-  if(!name || !grNo || !classV || !division || !house || !dob || selectedEvents.length===0){
-    showMessage('Please fill all fields and select at least one event.', 'warning');
+  const isValidFormat = /^\d{4}-\d{2}-\d{2}$/.test(dob);
+  if (!isValidFormat) {
+      showMessage('Please enter Date of Birth in the required YYYY-MM-DD format (e.g., 2010-01-25).', 'error');
+      return;
+  }
+
+  if(!name || !grNo || !classV || !division || !house || !dob || selectedEvents.length===0 || category === 'Invalid Date Format (YYYY-MM-DD)'){
+    showMessage('Please fill all fields correctly and select at least one event.', 'warning');
     return;
   }
     
