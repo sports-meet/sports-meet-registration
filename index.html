@@ -61,12 +61,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   </header>
 
   <form id="sportsForm" class="space-y-6">
-    <div class="grid sm:grid-cols-2 gap-4 sm:gap-6">
-      <!-- Full Name -->
-      <div class="sm:col-span-2">
-        <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-        <input type="text" id="name" class="app-input" required>
-      </div>
+    <!-- Full Name (Standalone for better layout control) -->
+    <div>
+        <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+        <input type="text" id="name" class="app-input" required>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <!-- GR Number -->
       <div>
         <label for="grNo" class="block text-sm font-medium text-gray-700">GR Number (5 digits)</label>
@@ -93,10 +94,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
           <option value="Emerald">Emerald</option>
         </select>
       </div>
-    </div>
-
-    <!-- DOB and Category -->
-    <div class="grid sm:grid-cols-2 gap-4 sm:gap-6">
+    
+      <!-- DOB and Category -->
       <div>
         <label for="dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
         <input type="date" id="dob" class="app-input" required>
@@ -389,7 +388,7 @@ document.getElementById('sportsForm').addEventListener('submit',async(e)=>{
 
     showMessage('Registration successful! Your form PDF will download shortly.', 'success');
     
-    // Generate PDF with submitted data (will be updated by user later)
+    // Generate PDF with submitted data
     generatePDF({name, grNo, class: classV, division, house, dob, category, events: selectedEvents});
     
     // Reset form
@@ -403,7 +402,7 @@ document.getElementById('sportsForm').addEventListener('submit',async(e)=>{
   }
 });
 
-/* ===== PDF GENERATION (NEW FORMAT) ===== */
+/* ===== PDF GENERATION (NEW FORMAT WITH ERROR HANDLING) ===== */
 function generatePDF(data){
   const content=document.createElement('div');
   content.style.padding='20px';
@@ -411,8 +410,12 @@ function generatePDF(data){
   
   // Helper function to create an underline field containing the data
   const field = (label, value) => {
+      // Ensure value is a string to calculate length correctly
+      const valueStr = String(value || ''); 
       const line = '_'.repeat(40); // Generate a long underscore line
-      return `<p style="margin: 10px 0;"><strong>${label}:</strong> ${value || ''} <span style="font-weight: normal;">${line.substring(value.length)}</span></p>`;
+      // Use slice to get the correct length of underline remaining after the text
+      const remainingUnderline = line.substring(valueStr.length); 
+      return `<p style="margin: 10px 0;"><strong>${label}:</strong> <span style="font-weight: normal; text-decoration: underline;">${valueStr}</span><span style="font-weight: normal;">${remainingUnderline}</span></p>`;
   };
 
   content.innerHTML=`
@@ -456,7 +459,12 @@ function generatePDF(data){
     <p style="margin-top: 30px;">Allow / Don’t Allow: _________________________________________________</p>
     <p style="margin-top: 30px;">Parent/Guardian Signature: _________________________________________________</p>
   `;
-  html2pdf().set({margin:10,filename:`${data.name}_SportsMeet2025_GR${data.grNo}.pdf`,html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(content).save();
+  html2pdf().set({margin:10,filename:`${data.name}_SportsMeet2025_GR${data.grNo}.pdf`,html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}})
+    .from(content).save()
+    .catch(err => {
+        console.error("PDF Generation Error:", err);
+        showMessage("Failed to generate PDF. Check console for details.", 'error');
+    });
 }
 
 /* ===== ADMIN PANEL LOGIC ===== */
