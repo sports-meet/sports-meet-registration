@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sports Meet Registration - Sunrise English Private School</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<title>Sports Meet Registration</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-r from-indigo-50 to-blue-100 min-h-screen font-sans">
 
-<!-- Registration Form -->
 <div id="mainContainer" class="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl mt-10 p-8 border border-blue-200">
   <h1 class="text-4xl font-bold text-center text-indigo-700 mb-4">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C- ABU DHBAI</h1>
   <h2 class="text-lg font-bold text-center text-gray-700 mb-8">ANNUAL SPORTS MEET 2025–2026 Registration</h2>
@@ -78,22 +77,7 @@
 <!-- Admin Panel -->
 <div id="adminPanel" class="hidden max-w-5xl mx-auto mt-10 bg-white p-6 rounded-2xl shadow-lg">
   <h2 class="text-2xl font-bold text-indigo-700 mb-4 text-center">Admin Panel - Sports Meet 2025</h2>
-  <div class="flex flex-wrap justify-between mb-4 space-x-2">
-    <select id="filterCategory" class="border p-2 rounded-md">
-      <option value="">Select Category</option>
-      <option value="Sub Junior">Sub Junior</option>
-      <option value="Junior">Junior</option>
-      <option value="Inter">Inter</option>
-      <option value="Senior">Senior</option>
-      <option value="Super Senior">Super Senior</option>
-    </select>
-    <select id="filterEvent" class="border p-2 rounded-md">
-      <option value="">Select Event</option>
-    </select>
-    <button id="downloadFilteredPDF" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Download Filtered PDF</button>
-    <button id="exportCSV" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Export CSV</button>
-    <button id="backToRegistration" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">Back to Registration</button>
-  </div>
+  <button id="backToRegistration" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 mb-4">Back to Registration</button>
   <div class="overflow-x-auto">
     <table class="min-w-full border border-gray-200 text-sm">
       <thead class="bg-indigo-100">
@@ -114,20 +98,21 @@
 </div>
 
 <script>
-// Firebase configuration
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyC-axJOwivMy-bGhNmVIHaXORcG90gLA9g",
   authDomain: "registration-c78dc.firebaseapp.com",
-  databaseURL: "https://registration-c78dc-default-rtdb.firebaseio.com",
+  databaseURL: "https://registration-c78dc-default-rtdb.firebaseio.com/",
   projectId: "registration-c78dc",
   storageBucket: "registration-c78dc.appspot.com",
   messagingSenderId: "368136278543",
-  appId: "1:368136278543:web:03a46a62d1095f40a0497a"
+  appId: "1:368136278543:web:03a46a62d1095f40a0497a",
+  measurementId: "G-14V6C8VSCH"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db=firebase.database();
 
-// Category setup
+// Categories and events
 const categories=[
 {name:'Sub Junior',limit:2,min:new Date('2017-01-01')},
 {name:'Junior',limit:3,min:new Date('2015-01-01')},
@@ -135,7 +120,6 @@ const categories=[
 {name:'Senior',limit:4,min:new Date('2010-01-01')},
 {name:'Super Senior',limit:4,min:new Date('2007-01-01')}
 ];
-
 const eventsByCategory={
 'Sub Junior':['100 mts','200 mts','Long Jump'],
 'Junior':['100 mts','200 mts','400 mts','Long Jump'],
@@ -160,7 +144,7 @@ function getCategory(dob){
  return 'Super Senior';
 }
 
-// Event selection
+// Events update
 dobInput.addEventListener('change',()=>{
  const cat=getCategory(dobInput.value);
  categoryField.value=cat;
@@ -194,7 +178,6 @@ form.addEventListener('submit',e=>{
  const events=Array.from(document.querySelectorAll('.eventCheck:checked')).map(e=>e.value);
  if(!name || !gr || !cls || !div || !house || !dob || events.length===0){alert('Please fill all fields.'); return;}
  const student={name,grNo:gr,class:cls,division:div,house,dob,category,events};
- // Save to Firebase
  db.ref('registrations/'+gr).set(student).then(()=>{
    generatePDF(student);
    alert('Registration successful! PDF is downloading...');
@@ -206,7 +189,10 @@ form.addEventListener('submit',e=>{
 // Generate PDF
 function generatePDF(data){
  const content=document.createElement('div');
- content.style.padding='20px'; content.style.fontFamily='Arial,sans-serif'; content.style.fontSize='12px'; content.style.lineHeight='1.5';
+ content.style.padding='20px';
+ content.style.fontFamily='Arial,sans-serif';
+ content.style.fontSize='12px';
+ content.style.lineHeight='1.5';
  content.innerHTML=`
  <div style="text-align:center; font-weight:bold; font-size:16px;">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C- ABU DHBAI</div>
  <div style="text-align:center; font-weight:bold; font-size:14px; margin-bottom:15px;">ANNUAL SPORTS MEET 2025-2026</div>
@@ -243,7 +229,7 @@ adminBtn.className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 mb-
 adminBtn.onclick=openAdmin;
 document.body.insertBefore(adminBtn, document.getElementById('mainContainer'));
 
-// Open admin
+// Admin panel
 function openAdmin(){
  const pass=prompt('Enter admin password:');
  if(pass!=='SUN2025'){alert('Incorrect password'); return;}
@@ -252,13 +238,12 @@ function openAdmin(){
  loadAdminData();
 }
 
-// Load admin data
 function loadAdminData(){
  db.ref('registrations').once('value').then(snapshot=>{
    const data=snapshot.val()||{};
    const table=document.getElementById('adminTable');
    table.innerHTML='';
-   Object.keys(data).forEach((gr,idx)=>{
+   Object.keys(data).forEach(gr=>{
      const d=data[gr];
      const tr=document.createElement('tr');
      tr.innerHTML=`
@@ -282,7 +267,7 @@ document.getElementById('backToRegistration').addEventListener('click',()=>{
  document.getElementById('adminPanel').classList.add('hidden');
  document.getElementById('mainContainer').classList.remove('hidden');
 });
-
 </script>
 </body>
 </html>
+
