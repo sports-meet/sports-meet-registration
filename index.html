@@ -4,44 +4,72 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sunrise Sports Meet Registration</title>
+<!-- Load Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* Custom font configuration for Tailwind */
+:root { font-family: 'Inter', sans-serif; }
+/* Ensure the date input has uniform styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.5); /* Makes the calendar icon more visible/themed */
+}
+.modal-overlay {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+</style>
 <!-- Modern Modular Firebase SDK (v10+) via CDN -->
 <script type="module" src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js"></script>
 <script type="module" src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js"></script>
 <!-- Library for PDF generation -->
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
-<!-- Tailwind CSS -->
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gradient-to-r from-indigo-50 to-blue-100 min-h-screen font-sans">
+<body class="bg-gray-50 min-h-screen font-sans p-4 sm:p-8">
+
+<!-- Confirmation/Alert Modal Structure (Hidden by default) -->
+<div id="confirmationModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay">
+    <div class="bg-white rounded-xl p-6 w-11/12 max-w-sm shadow-2xl transition duration-300 transform scale-100">
+        <h3 id="modalTitle" class="text-xl font-semibold text-gray-800 mb-4">Confirm Action</h3>
+        <p id="modalMessage" class="text-gray-600 mb-6"></p>
+        <div class="flex justify-end space-x-3">
+            <button id="modalCancelBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Cancel</button>
+            <button id="modalConfirmBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Confirm</button>
+        </div>
+    </div>
+</div>
 
 <!-- Registration Form -->
-<div id="mainContainer" class="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl mt-10 p-8 border border-blue-200">
-  <h1 class="text-4xl font-bold text-center text-indigo-700 mb-2">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C- ABU DHBAI</h1>
-  <h2 class="text-lg font-bold text-center text-gray-700 mb-6">ANNUAL SPORTS MEET 2025–2026 Registration</h2>
+<div id="mainContainer" class="max-w-xl mx-auto bg-white shadow-2xl rounded-2xl p-6 sm:p-10 border border-indigo-100">
+  <header class="text-center mb-8">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-indigo-700 leading-tight">Sunrise Sports Meet Registration</h1>
+    <h2 class="text-md text-gray-500 mt-1">ANNUAL SPORTS MEET 2025–2026</h2>
+  </header>
 
-  <form id="sportsForm" class="space-y-4">
-    <div>
-      <label class="block font-semibold text-gray-700">Full Name</label>
-      <input type="text" id="name" class="border p-2 w-full rounded-md" required>
-    </div>
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block font-semibold text-gray-700">GR Number</label>
-        <input type="text" id="grNo" maxlength="5" class="border p-2 w-full rounded-md" required>
+  <form id="sportsForm" class="space-y-6">
+    <div class="grid sm:grid-cols-2 gap-4 sm:gap-6">
+      <!-- Full Name -->
+      <div class="sm:col-span-2">
+        <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+        <input type="text" id="name" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" required>
       </div>
+      <!-- GR Number -->
       <div>
-        <label class="block font-semibold text-gray-700">Class</label>
-        <input type="text" id="class" class="border p-2 w-full rounded-md" required>
+        <label for="grNo" class="block text-sm font-medium text-gray-700">GR Number (5 digits)</label>
+        <input type="text" id="grNo" maxlength="5" pattern="\d{5}" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" required>
       </div>
-    </div>
-    <div class="grid grid-cols-2 gap-4">
+      <!-- Class -->
       <div>
-        <label class="block font-semibold text-gray-700">Division</label>
-        <input type="text" id="division" class="border p-2 w-full rounded-md" required>
+        <label for="class" class="block text-sm font-medium text-gray-700">Class</label>
+        <input type="text" id="class" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" required>
       </div>
+      <!-- Division -->
       <div>
-        <label class="block font-semibold text-gray-700">Sports House</label>
-        <select id="house" class="border p-2 w-full rounded-md" required>
+        <label for="division" class="block text-sm font-medium text-gray-700">Division</label>
+        <input type="text" id="division" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" required>
+      </div>
+      <!-- Sports House -->
+      <div>
+        <label for="house" class="block text-sm font-medium text-gray-700">Sports House</label>
+        <select id="house" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" required>
           <option value="">Select House</option>
           <option value="Ruby">Ruby</option>
           <option value="Sapphire">Sapphire</option>
@@ -50,63 +78,77 @@
         </select>
       </div>
     </div>
-    <div>
-      <label class="block font-semibold text-gray-700">Date of Birth</label>
-      <input type="date" id="dob" class="border p-2 w-full rounded-md" required>
-    </div>
-    <div>
-      <label class="block font-semibold text-gray-700">Category</label>
-      <input type="text" id="category" class="border p-2 w-full rounded-md bg-gray-100" readonly>
+
+    <!-- DOB and Category (Full Width) -->
+    <div class="grid sm:grid-cols-2 gap-4 sm:gap-6">
+      <div>
+        <label for="dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
+        <!-- input type="date" is best for mobile usability, allowing both typing and selection -->
+        <input type="date" id="dob" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" required>
+      </div>
+      <div>
+        <label for="category" class="block text-sm font-medium text-gray-700">Calculated Category</label>
+        <input type="text" id="category" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 bg-gray-100 text-gray-600" readonly placeholder="Enter DOB to calculate">
+      </div>
     </div>
 
-    <div id="eventsSection" class="hidden">
-      <label class="block font-semibold text-gray-700 mb-2">Select Events</label>
-      <div id="eventList" class="grid grid-cols-2 gap-2"></div>
-      <p id="eventNote" class="text-sm text-gray-600 mt-2"></p>
+    <!-- Events Selection -->
+    <div id="eventsSection" class="hidden p-4 sm:p-6 border border-dashed border-indigo-200 rounded-xl bg-indigo-50">
+      <label class="block text-lg font-semibold text-indigo-700 mb-3">Select Events</label>
+      <div id="eventList" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+      <p id="eventNote" class="text-sm text-indigo-600 mt-4 font-medium"></p>
     </div>
 
-    <button type="submit" class="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg w-full">Submit Registration</button>
+    <button type="submit" class="mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-xl w-full shadow-lg transform hover:scale-[1.01] transition duration-200">
+      Submit Registration
+    </button>
   </form>
 </div>
 
 <!-- Admin Panel -->
-<div id="adminPanel" class="hidden max-w-5xl mx-auto mt-10 bg-white p-6 rounded-2xl shadow-lg">
-  <h2 class="text-2xl font-bold text-indigo-700 mb-4 text-center">Admin Panel - Sports Meet 2025</h2>
-  <div class="flex flex-wrap gap-2 mb-4">
-    <select id="filterCategory" class="border p-2 rounded-md">
-      <option value="">Select Category</option>
+<div id="adminPanel" class="hidden max-w-6xl mx-auto mt-10 bg-white p-6 sm:p-8 rounded-2xl shadow-2xl border border-red-100">
+  <h2 class="text-3xl font-bold text-red-700 mb-6 text-center">Admin Panel: Sports Meet 2025 Registrations (Real-Time)</h2>
+  
+  <div class="flex flex-wrap items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+    <label class="font-semibold text-gray-700 mr-2">Filters:</label>
+    <select id="filterCategory" class="border p-2 rounded-lg focus:ring-red-500 focus:border-red-500">
+      <option value="">All Categories</option>
       <option value="Sub Junior">Sub Junior</option>
       <option value="Junior">Junior</option>
       <option value="Inter">Inter</option>
       <option value="Senior">Senior</option>
       <option value="Super Senior">Super Senior</option>
     </select>
-    <select id="filterEvent" class="border p-2 rounded-md">
-      <option value="">Select Event</option>
+    <select id="filterEvent" class="border p-2 rounded-lg focus:ring-red-500 focus:border-red-500">
+      <option value="">All Events</option>
     </select>
-    <button id="downloadFilteredPDF" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Download Filtered PDF</button>
-    <button id="exportCSV" class="bg-green-600 text-white px-4 py-2 rounded-lg">Export CSV</button>
-    <button id="backToRegistration" class="bg-gray-600 text-white px-4 py-2 rounded-lg">Back to Registration</button>
+    <button id="downloadFilteredPDF" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Download PDF (Current View)</button>
+    <button id="exportCSV" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">Export CSV</button>
+    <button id="backToRegistration" class="ml-auto bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">Back to Registration</button>
   </div>
 
-  <div class="overflow-x-auto">
-    <table class="min-w-full border border-gray-200 text-sm">
-      <thead class="bg-indigo-100">
+  <div class="overflow-x-auto rounded-lg shadow-md border border-gray-200">
+    <table class="min-w-full text-sm">
+      <thead class="bg-red-600 text-white uppercase tracking-wider">
         <tr>
-          <th class="border px-2 py-1">Name</th>
-          <th class="border px-2 py-1">GR No</th>
-          <th class="border px-2 py-1">Class</th>
-          <th class="border px-2 py-1">Div</th>
-          <th class="border px-2 py-1">House</th>
-          <th class="border px-2 py-1">Category</th>
-          <th class="border px-2 py-1">Events</th>
-          <th class="border px-2 py-1">Action</th>
+          <th class="px-4 py-2 text-left">Name</th>
+          <th class="px-4 py-2 text-left">GR No</th>
+          <th class="px-4 py-2 text-left">Class/Div</th>
+          <th class="px-4 py-2 text-left">House</th>
+          <th class="px-4 py-2 text-left">Category</th>
+          <th class="px-4 py-2 text-left">Events</th>
+          <th class="px-4 py-2 text-center">Action</th>
         </tr>
       </thead>
-      <tbody id="adminTable"></tbody>
+      <tbody id="adminTable" class="divide-y divide-gray-200"></tbody>
     </table>
   </div>
 </div>
+
+<!-- Floating Admin Access Button -->
+<button id="adminBtn" class="fixed bottom-6 right-6 bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-full shadow-xl transition duration-150 ease-in-out z-50 text-sm font-semibold transform hover:scale-105">
+    Admin Panel
+</button>
 
 <!-- Main Script Block using ES Modules -->
 <script type="module">
@@ -119,10 +161,10 @@ import {
   getDoc, 
   setDoc, 
   deleteDoc, 
-  getDocs, 
   query, 
   orderBy, 
-  serverTimestamp 
+  serverTimestamp,
+  onSnapshot // <-- NEW: Imported for real-time data listening
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 /* ===== FIREBASE SETUP - USING YOUR CONFIG ===== */
@@ -141,7 +183,10 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const REGISTRATIONS_COLLECTION = "registrations";
 
-/* ===== CATEGORIES & EVENTS (NO CHANGE) ===== */
+// Variable to hold the unsubscribe function for the real-time listener
+let unsubscribeListener = null; 
+
+/* ===== UI ELEMENTS & CONSTANTS ===== */
 const categories=[
 {name:'Sub Junior',limit:2,min:new Date('2017-01-01')},
 {name:'Junior',limit:3,min:new Date('2015-01-01')},
@@ -163,8 +208,78 @@ const categoryField=document.getElementById('category');
 const eventsSection=document.getElementById('eventsSection');
 const eventList=document.getElementById('eventList');
 const eventNote=document.getElementById('eventNote');
+const adminTable=document.getElementById('adminTable');
+const filterCategory=document.getElementById('filterCategory');
+const filterEvent=document.getElementById('filterEvent');
 
-/* ===== DETERMINE CATEGORY (NO CHANGE) ===== */
+
+/* ===== UTILITY FUNCTIONS (CONFIRMATION/ALERTS) ===== */
+
+/**
+ * Shows a custom alert message.
+ */
+function showMessage(message, type) {
+    let color = '';
+    switch (type) {
+        case 'success': color = 'bg-green-500'; break;
+        case 'error': color = 'bg-red-500'; break;
+        case 'warning': color = 'bg-yellow-500'; break;
+        default: color = 'bg-blue-500';
+    }
+
+    const msgBox = document.createElement('div');
+    msgBox.className = `fixed top-5 left-1/2 transform -translate-x-1/2 p-4 rounded-lg text-white font-bold shadow-2xl ${color} transition-opacity duration-300 z-[999]`;
+    msgBox.textContent = message;
+    document.body.appendChild(msgBox);
+
+    setTimeout(() => {
+        msgBox.style.opacity = 0;
+        setTimeout(() => msgBox.remove(), 300);
+    }, 3000);
+}
+
+/**
+ * Shows a custom confirmation modal and returns a Promise.
+ */
+function showConfirmation(title, message) {
+    return new Promise(resolve => {
+        const modal = document.getElementById('confirmationModal');
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalMessage').textContent = message;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        const confirmBtn = document.getElementById('modalConfirmBtn');
+        const cancelBtn = document.getElementById('modalCancelBtn');
+
+        // Clone and replace to remove existing event listeners
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+        const close = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        newConfirmBtn.onclick = () => {
+            close();
+            resolve(true);
+        };
+        newCancelBtn.onclick = () => {
+            close();
+            resolve(false);
+        };
+    });
+}
+
+
+/* ===== REGISTRATION LOGIC ===== */
+
+/**
+ * Determines the sports category based on DOB.
+ */
 function getCategory(dob){
   const parts=dob.split('-');
   const birthDate=new Date(parts[0],parts[1]-1,parts[2]);
@@ -172,32 +287,45 @@ function getCategory(dob){
   return 'Super Senior';
 }
 
-/* ===== UPDATE EVENTS (NO CHANGE) ===== */
+/**
+ * Updates the category field and populates event checkboxes.
+ */
 dobInput.addEventListener('change',()=>{
+  if (!dobInput.value) {
+    categoryField.value = '';
+    eventsSection.classList.add('hidden');
+    return;
+  }
   const cat=getCategory(dobInput.value);
   categoryField.value=cat;
   eventsSection.classList.remove('hidden');
   eventList.innerHTML='';
-  const limit=categories.find(c=>c.name===cat).limit;
-  eventNote.textContent=`You can select up to ${limit} events.`;
+  
+  const categoryData = categories.find(c=>c.name===cat);
+  const limit=categoryData ? categoryData.limit : 4; // Default to 4 for Super Senior
+  
+  eventNote.textContent=`You can select a maximum of ${limit} events.`;
+  
   eventsByCategory[cat].forEach(ev=>{
     const label=document.createElement('label');
-    label.className='flex items-center space-x-2';
-    label.innerHTML=`<input type='checkbox' value='${ev}' class='eventCheck'> <span>${ev}</span>`;
+    label.className='flex items-center space-x-2 text-gray-700 cursor-pointer hover:bg-white p-2 rounded-lg transition duration-100';
+    label.innerHTML=`<input type='checkbox' value='${ev}' class='eventCheck h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500'> <span>${ev}</span>`;
     eventList.appendChild(label);
   });
+  
   document.querySelectorAll('.eventCheck').forEach(chk=>{
     chk.addEventListener('change',()=>{
       if(document.querySelectorAll('.eventCheck:checked').length>limit){
         chk.checked=false; 
-        // Using custom UI alert instead of native alert()
-        showMessage(`You can select only ${limit} events.`, 'error');
+        showMessage(`Limit reached! You can select only ${limit} events in the ${cat} category.`, 'warning');
       }
     });
   });
 });
 
-/* ===== SUBMIT REGISTRATION (UPDATED FOR FIREBASE V10) ===== */
+/**
+ * Handles form submission and saving data to Firestore.
+ */
 document.getElementById('sportsForm').addEventListener('submit',async(e)=>{
   e.preventDefault();
 
@@ -211,18 +339,18 @@ document.getElementById('sportsForm').addEventListener('submit',async(e)=>{
   const selectedEvents=Array.from(document.querySelectorAll('.eventCheck:checked')).map(e=>e.value);
 
   if(!name || !grNo || !classV || !division || !house || !dob || selectedEvents.length===0){
-    showMessage('Please fill all fields and select events.', 'warning');
+    showMessage('Please fill all fields and select at least one event.', 'warning');
     return;
   }
     
   try {
-    // Reference to the document using GR No as the document ID
+    // Use GR No as the document ID for easy lookup and uniqueness check
     const regDocRef = doc(db, REGISTRATIONS_COLLECTION, grNo);
     const docSnap = await getDoc(regDocRef);
 
-    // Check for duplicate GR No (prevention)
+    // Check for duplicate registration
     if (docSnap.exists()) {
-      showMessage(`A registration for GR No ${grNo} already exists.`, 'error');
+      showMessage(`A registration for GR No ${grNo} already exists. Please check the number.`, 'error');
       return;
     }
 
@@ -236,123 +364,177 @@ document.getElementById('sportsForm').addEventListener('submit',async(e)=>{
       dob,
       category,
       events: selectedEvents,
-      timestamp: serverTimestamp() // Use server timestamp for accurate sorting
+      timestamp: serverTimestamp()
     });
 
-    showMessage('Registration successful! PDF will download.', 'success');
+    showMessage('Registration successful! Your form PDF will download shortly.', 'success');
     
-    // Generate PDF with submitted data
+    // Generate PDF with submitted data (will be updated by user later)
     generatePDF({name, grNo, class: classV, division, house, dob, category, events: selectedEvents});
     
     // Reset form
     document.getElementById('sportsForm').reset();
     categoryField.value=''; 
     eventsSection.classList.add('hidden');
-    document.querySelectorAll('.eventCheck').forEach(chk => chk.checked = false); // Ensure checkboxes are cleared
-    loadAdminData(); // Refresh admin panel if open
-
+    
   } catch(err){
     console.error('Submission Error:', err); 
-    showMessage('Error submitting registration. Check the console and ensure Firebase Rules are set to public for testing.', 'error'); 
+    showMessage('Error submitting registration. Please check your console for details.', 'error'); 
   }
 });
 
-/* ===== GENERATE PDF (NO CHANGE) ===== */
+/* ===== PDF GENERATION (AWAITING NEW FORMAT) ===== */
 function generatePDF(data){
   const content=document.createElement('div');
   content.style.padding='20px';
   content.style.fontFamily='Arial,sans-serif';
   content.innerHTML=`
-    <div style="text-align:center;font-weight:bold;">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C- ABU DHBAI</div>
-    <div style="text-align:center;font-weight:bold;">ANNUAL SPORTS MEET 2025-2026</div>
-    <p>Dear Parents,</p>
-    <p>Full Name: ${data.name}</p>
-    <p>GR No: ${data.grNo}</p>
-    <p>Class: ${data.class}</p>
-    <p>Division: ${data.division}</p>
-    <p>DOB: ${data.dob}</p>
-    <p>Sports House: ${data.house}</p>
-    <p>Category: ${data.category}</p>
-    <p>Selected Events:</p>
-    <ul>${data.events.map(e=>`<li>${e}</li>`).join('')}</ul>
-    <p>Allow / Don’t Allow: ________________</p>
+    <div style="text-align:center;font-weight:bold; font-size: 16px;">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C- ABU DHBAI</div>
+    <div style="text-align:center;font-weight:bold; font-size: 14px;">ANNUAL SPORTS MEET 2025-2026 - Registration Confirmation</div>
+    <hr style="margin: 10px 0;">
+    <p><strong>Name:</strong> ${data.name}</p>
+    <p><strong>GR No:</strong> ${data.grNo}</p>
+    <p><strong>Class & Division:</strong> ${data.class} / ${data.division}</p>
+    <p><strong>DOB:</strong> ${data.dob}</p>
+    <p><strong>Sports House:</strong> ${data.house}</p>
+    <p><strong>Category:</strong> ${data.category}</p>
+    <h4 style="margin-top: 15px; font-weight: bold;">Selected Events:</h4>
+    <ul style="list-style: none; padding-left: 0;">${data.events.map(e=>`<li style="margin-left: 10px;">• ${e}</li>`).join('')}</ul>
+    <hr style="margin: 20px 0;">
+    <p style="font-style: italic; font-size: 12px;">This is a system generated confirmation. Please await further instructions.</p>
+    <p style="margin-top: 30px;">Parent/Guardian Signature: ________________</p>
   `;
-  html2pdf().set({margin:10,filename:`${data.name}_SportsMeet2025.pdf`,html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(content).save();
+  html2pdf().set({margin:10,filename:`${data.name}_SportsMeet2025_GR${data.grNo}.pdf`,html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(content).save();
 }
 
-/* ===== ADMIN PANEL ACCESS (NO CHANGE) ===== */
+/* ===== ADMIN PANEL LOGIC ===== */
+
+/**
+ * Cleans up the real-time listener when leaving the admin panel.
+ */
 document.getElementById('backToRegistration').addEventListener('click',()=>{
   document.getElementById('adminPanel').classList.add('hidden');
   document.getElementById('mainContainer').classList.remove('hidden');
+    // Stop the listener when going back to the form
+    if (unsubscribeListener) {
+        unsubscribeListener();
+        unsubscribeListener = null;
+    }
 });
 
-const adminBtn=document.createElement('button');
-adminBtn.textContent="Admin Panel";
-adminBtn.className="fixed bottom-4 right-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-xl transition duration-150 ease-in-out z-50";
-document.body.appendChild(adminBtn);
-
-adminBtn.addEventListener('click',async()=>{
-  const pass=prompt('Enter admin password:');
+document.getElementById('adminBtn').addEventListener('click',async()=>{
+  const pass=prompt('Enter admin password:'); // Simple prompt for access
   if(pass!=="SUN2025"){ showMessage('Incorrect password.', 'error'); return;}
   document.getElementById('mainContainer').classList.add('hidden');
   document.getElementById('adminPanel').classList.remove('hidden');
-  await loadAdminData();
+  // Start the real-time listener when entering the admin panel
+  setupAdminListener();
 });
 
-/* ===== LOAD ADMIN DATA (UPDATED FOR FIREBASE V10) ===== */
-async function loadAdminData(){
-  try {
-      // Create a query to get all documents, ordered by timestamp (newest first)
-      const q = query(collection(db, REGISTRATIONS_COLLECTION), orderBy("timestamp", "desc"));
-      const querySnapshot = await getDocs(q);
-      
-      const data = [];
-      querySnapshot.forEach((doc) => {
-        data.push(doc.data());
-      });
-      
-      const table=document.getElementById('adminTable');
-      table.innerHTML='';
+// Event listeners for filtering
+// Now, changing the filter just triggers a reload of the listener/data renderer
+filterCategory.addEventListener('change', setupAdminListener);
+filterEvent.addEventListener('change', setupAdminListener);
+document.getElementById('exportCSV').addEventListener('click', exportCSV);
+document.getElementById('downloadFilteredPDF').addEventListener('click', downloadFilteredPDF);
 
-      data.forEach((d)=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML=`
-            <td class='border px-2 py-1'>${d.name}</td>
-            <td class='border px-2 py-1'>${d.grNo}</td>
-            <td class='border px-2 py-1'>${d.class}</td>
-            <td class='border px-2 py-1'>${d.division}</td>
-            <td class='border px-2 py-1'>${d.house}</td>
-            <td class='border px-2 py-1'>${d.category}</td>
-            <td class='border px-2 py-1'>${d.events.join(', ')}</td>
-            <td class='border px-2 py-1'>
-              <button data-gr="${d.grNo}" class='removeBtn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs'>Remove</button>
-            </td>
-          `;
-          // Remove button logic (UPDATED FOR FIREBASE V10)
-          tr.querySelector('.removeBtn').addEventListener('click',async(e)=>{
-              const grToRemove = e.target.getAttribute('data-gr');
-              if(window.confirm(`Remove registration for ${d.name} (GR No: ${grToRemove})?`)){
-                  await deleteDoc(doc(db, REGISTRATIONS_COLLECTION, grToRemove));
-                  loadAdminData(); // Reload table after deletion
-                  showMessage(`Registration for GR No ${grToRemove} removed.`, 'success');
-              }
-          });
+/**
+ * Loads data from Firestore in real-time, filters it, and renders the table.
+ */
+function setupAdminListener(){
+    // Get current filter values (must be read inside the function)
+    const filterCat = filterCategory.value;
+    const filterEvt = filterEvent.value;
 
-          table.appendChild(tr);
-      });
+    // Build the base query (always ordered by timestamp for newest first)
+    const q = query(collection(db, REGISTRATIONS_COLLECTION), orderBy("timestamp", "desc"));
+    
+    // Cleanup existing listener if it exists before setting up a new one
+    if (unsubscribeListener) {
+        unsubscribeListener();
+    }
+    
+    // Setup NEW real-time listener using onSnapshot
+    unsubscribeListener = onSnapshot(q, (querySnapshot) => {
+        try {
+            const allData = [];
+            querySnapshot.forEach((doc) => {
+                allData.push(doc.data());
+            });
+            
+            // Filter data client-side based on current filter dropdown values
+            const filteredData = allData.filter(d => {
+                const categoryMatch = !filterCat || d.category === filterCat;
+                const eventMatch = !filterEvt || d.events.includes(filterEvt);
+                return categoryMatch && eventMatch;
+            });
+    
+            renderAdminTable(filteredData);
+            populateFilters(allData);
 
-      populateFilters(data);
-
-  } catch (err) {
-      console.error("Error loading admin data:", err);
-      showMessage("Could not load data. Check console and ensure Firebase Rules permit reading.", 'error');
-    }
+        } catch (err) {
+            console.error("Error processing snapshot data:", err);
+            showMessage("Could not process real-time updates.", 'error');
+        }
+    }, (error) => {
+        console.error("Error receiving real-time snapshot:", error);
+        showMessage("Real-time connection failed. Check console.", 'error');
+    });
 }
 
-// Helper function to populate event filters (NO CHANGE)
+/**
+ * Renders the data into the admin HTML table.
+ */
+function renderAdminTable(data) {
+    adminTable.innerHTML = '';
+
+    data.forEach((d) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50';
+        tr.innerHTML = `
+            <td class='px-4 py-2 border-r text-gray-800 font-medium'>${d.name}</td>
+            <td class='px-4 py-2 border-r text-gray-600'>${d.grNo}</td>
+            <td class='px-4 py-2 border-r text-gray-600'>${d.class}/${d.division}</td>
+            <td class='px-4 py-2 border-r text-gray-600'>${d.house}</td>
+            <td class='px-4 py-2 border-r text-gray-600'>${d.category}</td>
+            <td class='px-4 py-2 border-r text-gray-600 max-w-xs overflow-hidden truncate'>${d.events.join(', ')}</td>
+            <td class='px-4 py-2 text-center'>
+              <button data-gr="${d.grNo}" class='removeBtn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-semibold shadow-sm transition duration-150'>Remove</button>
+            </td>
+          `;
+        
+        // Remove button logic using custom confirmation modal
+        tr.querySelector('.removeBtn').addEventListener('click', async(e) => {
+            const grToRemove = e.target.getAttribute('data-gr');
+            const confirmed = await showConfirmation(
+                'Confirm Deletion', 
+                `Are you sure you want to permanently remove the registration for GR No ${grToRemove} (${d.name})? This cannot be undone.`
+            );
+
+            if (confirmed) {
+                try {
+                    await deleteDoc(doc(db, REGISTRATIONS_COLLECTION, grToRemove));
+                    // The onSnapshot listener handles the table reload automatically!
+                    showMessage(`Registration for GR No ${grToRemove} removed successfully.`, 'success');
+                } catch (err) {
+                    console.error("Error deleting document:", err);
+                    showMessage("Failed to remove registration. See console.", 'error');
+                }
+            }
+        });
+
+        adminTable.appendChild(tr);
+    });
+}
+
+
+/**
+ * Populates the event filter dropdown based on all available data.
+ */
 function populateFilters(data) {
     const filterEvent = document.getElementById('filterEvent');
-    filterEvent.innerHTML = '<option value="">Select Event</option>';
+    const selectedEvent = filterEvent.value; // Preserve selection
+    filterEvent.innerHTML = '<option value="">All Events</option>';
     const eventSet = new Set();
     data.forEach(d => d.events.forEach(e => eventSet.add(e)));
     
@@ -362,90 +544,78 @@ function populateFilters(data) {
         option.textContent = event;
         filterEvent.appendChild(option);
     });
+
+    // Restore selection
+    if (selectedEvent) filterEvent.value = selectedEvent;
 }
 
-
-// Event listeners for filtering and downloading (NO CHANGE in logic)
-document.getElementById('filterCategory').addEventListener('change', loadAdminData);
-document.getElementById('filterEvent').addEventListener('change', loadAdminData);
-document.getElementById('exportCSV').addEventListener('click', exportCSV);
-document.getElementById('downloadFilteredPDF').addEventListener('click', downloadFilteredPDF);
-
-
-// CSV Export function (NO CHANGE in logic)
+// CSV Export function 
 function exportCSV() {
     const table = document.getElementById('adminTable');
-    let csv = [];
-    const rows = table.querySelectorAll('tr');
-
-    for (const row of rows) {
-        const cells = row.querySelectorAll('th, td');
-        const rowData = Array.from(cells).map(cell => {
-            // Remove the 'Remove' button text
-            if (cell.querySelector('button')) return ''; 
-            // Escape commas in cell data
+    if (table.rows.length === 0) {
+        showMessage("No data to export.", 'warning');
+        return;
+    }
+    // Get headers from the admin table (excluding the Action column)
+    const headerRow = document.querySelector('#adminPanel table thead tr');
+    let csv = [
+        Array.from(headerRow.querySelectorAll('th:not(:last-child)')).map(th => `"${th.textContent.trim()}"`).join(',')
+    ];
+    
+    for (const row of table.rows) {
+        const cells = row.querySelectorAll('td');
+        const rowData = Array.from(cells).slice(0, -1).map(cell => { // Exclude last cell (Action)
             let data = cell.innerText.replace(/"/g, '""');
             return `"${data}"`;
-        }).filter(d => d !== ''); // Filter out empty cells (from 'Action' column)
+        });
         csv.push(rowData.join(','));
     }
 
     const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
     const downloadLink = document.createElement('a');
-    downloadLink.download = 'sports_registrations.csv';
+    downloadLink.download = 'sports_registrations_filtered.csv';
     downloadLink.href = window.URL.createObjectURL(csvFile);
     downloadLink.style.display = 'none';
     document.body.appendChild(downloadLink);
     downloadLink.click();
 }
 
-// PDF Download function for current table view (NO CHANGE in logic)
+// PDF Download function for current table view
 function downloadFilteredPDF() {
     const table = document.getElementById('adminTable');
-    
-    // Create a printable div with the header
+    if (table.rows.length === 0) {
+        showMessage("No data to download.", 'warning');
+        return;
+    }
+    
     const content = document.createElement('div');
     content.innerHTML = `
-        <h2 style="text-align:center;font-weight:bold;">SUNRISE SPORTS MEET REGISTRATIONS (FILTERED)</h2>
+        <h2 style="text-align:center;font-weight:bold; margin-bottom: 10px;">SPORTS MEET REGISTRATIONS (${document.getElementById('filterCategory').value || 'ALL'})</h2>
     `;
     
     // Clone the table for the PDF
-    const tableClone = table.parentNode.cloneNode(true);
-    tableClone.style.fontSize = '10px';
+    const tableContainerClone = document.querySelector('#adminPanel .overflow-x-auto').cloneNode(true);
+    const tableClone = tableContainerClone.querySelector('table');
+    tableClone.style.fontSize = '9px';
     
     // Remove the 'Action' column from the cloned table
-    tableClone.querySelectorAll('th:last-child, td:last-child').forEach(el => el.remove());
+    const headerRow = tableClone.querySelector('thead tr');
+    const dataRows = tableClone.querySelectorAll('tbody tr');
+    
+    // Remove the last column (Action) from header and body
+    headerRow.querySelector('th:last-child').remove();
+    dataRows.forEach(row => row.querySelector('td:last-child').remove());
 
-    content.appendChild(tableClone);
+    content.appendChild(tableContainerClone);
 
     html2pdf().set({
         margin: 10,
         filename: 'sports_registrations_filtered.pdf',
         html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } // Landscape is better for tables
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     }).from(content).save();
 }
 
-/* ===== CUSTOM MESSAGE BOX (Replacing alert/confirm) ===== */
-function showMessage(message, type) {
-    let color = '';
-    switch (type) {
-        case 'success': color = 'bg-green-500'; break;
-        case 'error': color = 'bg-red-500'; break;
-        case 'warning': color = 'bg-yellow-500'; break;
-        default: color = 'bg-blue-500';
-    }
-
-    const msgBox = document.createElement('div');
-    msgBox.className = `fixed top-5 left-1/2 transform -translate-x-1/2 p-3 rounded-lg text-white font-bold shadow-2xl ${color} transition-opacity duration-300`;
-    msgBox.textContent = message;
-    document.body.appendChild(msgBox);
-
-    setTimeout(() => {
-        msgBox.style.opacity = 0;
-        setTimeout(() => msgBox.remove(), 300);
-    }, 3000);
-}
 </script>
 </body>
 </html>
