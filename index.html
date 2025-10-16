@@ -196,7 +196,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             <h2 class="text-xl text-gray-600 mt-2 font-light">Annual Registration 2025–2026</h2>
         </header>
         
-        <!-- NEW: Submission Complete Message -->
+        <!-- Submission Complete Message -->
         <div id="submissionCompleteMessage" class="hidden text-center p-8 border-4 border-dashed border-green-300 rounded-2xl bg-green-50 shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-20 w-20 text-green-500 mb-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
@@ -437,7 +437,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const adminTableBody = document.getElementById('adminTableBody');
     const adminSearch = document.getElementById('adminSearch');
     const totalRegistrations = document.getElementById('totalRegistrations');
-    const submissionCompleteMessage = document.getElementById('submissionCompleteMessage'); // NEW
+    const submissionCompleteMessage = document.getElementById('submissionCompleteMessage'); 
 
     // NEW ADMIN FILTER ELEMENTS
     const filterCategory = document.getElementById('filterCategory');
@@ -466,7 +466,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const summaryTitle = document.getElementById('summaryTitle');
     const summaryDetails = document.getElementById('summaryDetails');
     const savePdfBtn = document.getElementById('savePdfBtn');
-    const doneBtn = document.getElementById('doneBtn'); // Renamed from newRegistrationBtn
+    const doneBtn = document.getElementById('doneBtn'); 
 
 
     let allRegistrations = []; // Store the full list of registrations
@@ -1112,52 +1112,15 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
     // --- Event Listeners and Main Setup ---
 
-    window.onload = function() {
-        // 1. Authentication
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                if (db) {
-                    const q = query(collection(db, COLLECTION_PATH));
-                    onSnapshot(q, (snapshot) => {
-                        allRegistrations = snapshot.docs.map(doc => {
-                            const data = doc.data();
-                            return { 
-                                id: doc.id, 
-                                isFinalist: data.isFinalist || false, 
-                                ...data 
-                            };
-                        });
-                        
-                        populateFilters(allRegistrations);
-                        filterAdminData();
-                    }, (error) => {
-                        console.error("Firestore error:", error);
-                        adminTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">Error loading data. Check console.</td></tr>';
-                    });
-                }
-            } else {
-                if (initialAuthToken) {
-                    try {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                    } catch(e) {
-                         console.error("Custom token sign-in failed, falling back to anonymous:", e);
-                         await signInAnonymously(auth);
-                    }
-                } else {
-                    await signInAnonymously(auth);
-                }
-            }
-        });
-
-        // 2. DOB/Category Change Logic
+    function initializeListeners() {
+        // 1. DOB/Category Change Logic
         dobInput.addEventListener('change', () => {
             const category = calculateCategory(dobInput.value);
             categoryInput.value = category;
             renderEvents(category);
         });
 
-        // 3. Form Submission Handling
+        // 2. Form Submission Handling
         sportsForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
@@ -1229,7 +1192,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             }
         });
         
-        // 4. Admin Panel Toggling 
+        // 3. Admin Panel Toggling 
         adminBtn.addEventListener('click', () => {
             const isCurrentlyAdmin = !adminPanel.classList.contains('hidden');
 
@@ -1240,7 +1203,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             }
         });
 
-        // 5. Admin Login Modal Listeners
+        // 4. Admin Login Modal Listeners
         loginCancelBtn.addEventListener('click', closeAdminLoginModal);
         loginSubmitBtn.addEventListener('click', handleAdminLogin);
         adminPasswordInput.addEventListener('keydown', (e) => {
@@ -1251,16 +1214,16 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         });
 
 
-        // 6. Back to Form Button (in admin panel)
+        // 5. Back to Form Button (in admin panel)
         backToFormBtn.addEventListener('click', () => toggleView('form'));
         
-        // 7. Admin Search/Filter Listeners
+        // 6. Admin Search/Filter Listeners
         adminSearch.addEventListener('input', filterAdminData);
         filterCategory.addEventListener('change', filterAdminData);
         filterClass.addEventListener('change', filterAdminData);
         filterEvent.addEventListener('change', filterAdminData);
 
-        // 8. Clear Filters Button
+        // 7. Clear Filters Button
         clearFiltersBtn.addEventListener('click', () => {
             adminSearch.value = '';
             filterCategory.value = '';
@@ -1269,21 +1232,65 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             filterAdminData();
         });
 
-        // 9. Download Button Listener (CSV)
+        // 8. Download Button Listener (CSV)
         downloadCsvBtn.addEventListener('click', () => {
             downloadCSV(filteredRegistrations);
         });
         
-        // 10. Summary Page Listeners (PDF Feature)
+        // 9. Summary Page Listeners (PDF Feature)
         savePdfBtn.addEventListener('click', () => {
             window.print(); // Triggers the browser's print dialog (select "Save as PDF")
         });
         
-        // NEW: Done button to return to the completed state
+        // 10. Done button to return to the completed state
         doneBtn.addEventListener('click', () => {
             toggleView('form');
         });
+    }
+
+    window.onload = function() {
+        // Initialize all event listeners first
+        initializeListeners(); 
         
+        // 1. Authentication and Firestore setup
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                if (db) {
+                    const q = query(collection(db, COLLECTION_PATH));
+                    // Start real-time listener for registrations
+                    onSnapshot(q, (snapshot) => {
+                        allRegistrations = snapshot.docs.map(doc => {
+                            const data = doc.data();
+                            return { 
+                                id: doc.id, 
+                                isFinalist: data.isFinalist || false, 
+                                ...data 
+                            };
+                        });
+                        
+                        populateFilters(allRegistrations);
+                        filterAdminData();
+                    }, (error) => {
+                        console.error("Firestore error:", error);
+                        adminTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">Error loading data. Check console.</td></tr>';
+                    });
+                }
+            } else {
+                // Sign in anonymously if no token is available
+                if (initialAuthToken) {
+                    try {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } catch(e) {
+                         console.error("Custom token sign-in failed, falling back to anonymous:", e);
+                         await signInAnonymously(auth);
+                    }
+                } else {
+                    await signInAnonymously(auth);
+                }
+            }
+        });
+
         // Set initial view
         toggleView('form');
     };
@@ -1291,4 +1298,3 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 </script>
 </body>
 </html>
-
