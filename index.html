@@ -26,6 +26,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 .app-button-blue { @apply bg-blue-600 text-white hover:bg-blue-700; }
 .app-button-red { @apply bg-red-600 text-white hover:bg-red-700; }
 .app-button-green { @apply bg-green-600 text-white hover:bg-green-700; }
+.app-button:disabled { @apply opacity-50 cursor-not-allowed transform-none shadow-none; } /* Added disabled style */
 
 
 .modal-overlay { background-color: rgba(0,0,0,0.6); }
@@ -379,14 +380,21 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     // setLogLevel('Debug'); // Uncomment for debugging
     
     let db, auth, userId;
+    let isDatabaseReady = false; // NEW FLAG: Tracks if Firebase services initialized successfully
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
     if (firebaseConfig) {
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            isDatabaseReady = true; // Set flag to true only upon successful initialization
+        } catch (e) {
+            console.error("Firebase Initialization Failed:", e);
+            // isDatabaseReady remains false if init fails
+        }
     }
 
     const COLLECTION_PATH = `/artifacts/${appId}/public/data/registrations`;
@@ -660,7 +668,10 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
      * Updates the isFinalist status for a given registration ID.
      */
     async function toggleFinalistStatus(docId, currentStatus) {
-        if (!db) return;
+        if (!isDatabaseReady) { // Check database status
+            showMessageBox('Database is not initialized. Please ensure Firebase configuration is provided.', 'error');
+            return;
+        }
         try {
             const regRef = doc(db, COLLECTION_PATH, docId);
             await setDoc(regRef, { isFinalist: !currentStatus }, { merge: true });
@@ -672,8 +683,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     }
 
     async function saveRegistration(data, docId = null) {
-        if (!db) {
-            showMessageBox('Database not initialized.', 'error');
+        if (!isDatabaseReady) { // Check database status
+            showMessageBox('Database is not initialized. Please ensure Firebase configuration is provided.', 'error');
             return;
         }
         
@@ -703,7 +714,10 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     }
 
     async function deleteRegistration(docId) {
-        if (!db) return;
+        if (!isDatabaseReady) { // Check database status
+            showMessageBox('Database is not initialized. Please ensure Firebase configuration is provided.', 'error');
+            return;
+        }
         try {
             await deleteDoc(doc(db, COLLECTION_PATH, docId));
             showMessageBox('Registration deleted successfully.', 'success');
@@ -908,6 +922,13 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 const submitBtn = sportsForm.querySelector('button[type="submit"]');
                 submitBtn.textContent = 'Submit Registration';
                 delete submitBtn.dataset.editingId;
+                
+                // Re-check database state and potentially re-disable the button
+                if (!isDatabaseReady) {
+                    submitBtn.disabled = true;
+                } else {
+                    submitBtn.disabled = false;
+                }
             }
         } else if (view === 'summary') {
             mainContainer.classList.add('hidden');
@@ -1252,12 +1273,15 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         // Initialize all event listeners first
         initializeListeners(); 
         
+        const submitBtn = sportsForm.querySelector('button[type="submit"]');
+
         // 1. Authentication and Firestore setup
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                if (db) {
+        if (isDatabaseReady) { // ONLY proceed if Firebase initialized successfully
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
                     const q = query(collection(db, COLLECTION_PATH));
+                    
                     // Start real-time listener for registrations
                     onSnapshot(q, (snapshot) => {
                         allRegistrations = snapshot.docs.map(doc => {
@@ -1275,21 +1299,27 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                         console.error("Firestore error:", error);
                         adminTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">Error loading data. Check console.</td></tr>';
                     });
-                }
-            } else {
-                // Sign in anonymously if no token is available
-                if (initialAuthToken) {
-                    try {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                    } catch(e) {
-                         console.error("Custom token sign-in failed, falling back to anonymous:", e);
-                         await signInAnonymously(auth);
-                    }
                 } else {
-                    await signInAnonymously(auth);
+                    // Sign in anonymously if no token is available
+                    if (initialAuthToken) {
+                        try {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } catch(e) {
+                             console.error("Custom token sign-in failed, falling back to anonymous:", e);
+                             await signInAnonymously(auth);
+                        }
+                    } else {
+                        await signInAnonymously(auth);
+                    }
                 }
-            }
-        });
+            });
+        } else {
+             // Handle the case where the database is not ready
+             console.error("Firebase is not configured or failed to initialize. Database operations are disabled.");
+             showMessageBox('App Offline: Database configuration is missing. Submissions are disabled.', 'error');
+             submitBtn.disabled = true;
+             adminBtn.disabled = true;
+        }
 
         // Set initial view
         toggleView('form');
