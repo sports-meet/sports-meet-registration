@@ -1,1 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - Sports Meet</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<style>
+body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
+.container { max-width: 900px; margin: 40px auto; padding: 25px; background-color: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+h1 { font-size: 1.8rem; font-weight: bold; margin-bottom: 1rem; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #ddd; padding: 0.6rem; text-align: left; }
+th { background-color: #2563eb; color: white; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Admin Panel - Registrations</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Events</th>
+      </tr>
+    </thead>
+    <tbody id="adminTableBody">
+      <!-- Filled dynamically -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Load registrations
+function loadRegistrations() {
+  const tableBody = document.getElementById('adminTableBody');
+  tableBody.innerHTML = '';
+
+  db.collection('registrations').orderBy('timestamp', 'desc').get()
+    .then(snapshot => {
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const row = `<tr>
+          <td>${data.name}</td>
+          <td>${data.category}</td>
+          <td>${data.events.join(', ')}</td>
+        </tr>`;
+        tableBody.innerHTML += row;
+      });
+    })
+    .catch(err => console.error("Error fetching registrations:", err));
+}
+
+loadRegistrations();
+</script>
+</body>
+</html>
 
