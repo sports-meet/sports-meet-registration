@@ -374,21 +374,19 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, query, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    // import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Not used but kept for reference
 
-    // --- Firebase Initialization ---
-    // setLogLevel('Debug'); // Uncomment for debugging
+    // --- Firebase Initialization with Explicit Configuration ---
     
     let db, auth, userId;
     let isDatabaseReady = false; 
 
+    // Retrieve global IDs
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
     
-    // --- MANUAL CONFIGURATION INJECTION ---
-    // We use the provided configuration here directly as a fallback if the environment variable is not present.
-    // The environment uses __firebase_config as a JSON string. We parse it if available, or use the provided object directly as a fail-safe.
-    const providedFirebaseConfig = {
+    // Explicit Firebase Configuration provided by the user
+    // NOTE: In a real app, this should be kept secret. It's exposed here for platform functionality.
+    const hardcodedFirebaseConfig = {
         apiKey: "AIzaSyC-axJOwivMy-bGhNmVIHaXORcG90gLA9g",
         authDomain: "registration-c78dc.firebaseapp.com",
         projectId: "registration-c78dc",
@@ -398,26 +396,29 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         measurementId: "G-14V6C8VSCH"
     };
     
-    let firebaseConfig = providedFirebaseConfig;
+    // Prioritize environment config if available, otherwise use the hardcoded one
+    let finalConfig = hardcodedFirebaseConfig;
     if (typeof __firebase_config !== 'undefined' && __firebase_config !== '') {
         try {
-            // Attempt to parse the environment variable config first
-            firebaseConfig = JSON.parse(__firebase_config);
+            finalConfig = JSON.parse(__firebase_config);
         } catch (e) {
-            console.warn("Could not parse __firebase_config environment variable, using manual configuration as fallback.");
+            console.warn("Could not parse __firebase_config, using hardcoded config.");
         }
     }
     
-    if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
+    // Initialize Firebase Services
+    if (finalConfig && finalConfig.apiKey && finalConfig.projectId) {
         try {
-            const app = initializeApp(firebaseConfig);
+            const app = initializeApp(finalConfig);
             db = getFirestore(app);
             auth = getAuth(app);
             isDatabaseReady = true; 
+            console.log("Firebase and Firestore initialized successfully.");
         } catch (e) {
             console.error("Firebase Initialization Failed:", e);
-            // isDatabaseReady remains false if init fails
         }
+    } else {
+        console.error("Firebase Initialization Failed: Configuration is incomplete.");
     }
 
 
@@ -726,7 +727,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                     return;
                 }
                 
-                await addDoc(collection(db, COLLECTION_PATH), data);
+                // Firestore V9 equivalent of db.collection("registrations").add({...})
+                await addDoc(collection(db, COLLECTION_PATH), data); 
                 showMessageBox('Registration submitted successfully!', 'success');
                 lastSubmittedData = data; // Store data for PDF download
                 toggleView('summary'); // Show summary screen after submission
@@ -989,15 +991,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             </p>
         `;
 
-        // We use an empty space for the dynamic content on print to ensure a visible underline blank, as requested by the user format.
-        const lineWithBlank = (label, value) => `
-            <p class="text-md flex items-end mb-3">
-                <span class="whitespace-nowrap">${label}:</span> 
-                <span class="font-bold flex-grow min-w-[50px] border-b border-gray-900 ml-2 text-blue-700 print-info-field text-transparent">${value || '&nbsp;'}</span>
-            </p>
-        `;
-
-
         // 2. Introduction & Dates
         const introHtml = `
             <div class="text-left space-y-3 mt-4 text-gray-800">
@@ -1012,7 +1005,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             <div class="mt-8">
         `;
         
-        // 3. Dynamic Student Details - Using the lineWithBlank structure to show the field name then a line.
+        // 3. Dynamic Student Details
         const studentDetailsHtml = `
             <div class="print-info-section space-y-4">
                 ${line('Full Name of the student', data.name)}
