@@ -380,22 +380,46 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     // setLogLevel('Debug'); // Uncomment for debugging
     
     let db, auth, userId;
-    let isDatabaseReady = false; // NEW FLAG: Tracks if Firebase services initialized successfully
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    let isDatabaseReady = false; 
 
-    if (firebaseConfig) {
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    
+    // --- MANUAL CONFIGURATION INJECTION ---
+    // We use the provided configuration here directly as a fallback if the environment variable is not present.
+    // The environment uses __firebase_config as a JSON string. We parse it if available, or use the provided object directly as a fail-safe.
+    const providedFirebaseConfig = {
+        apiKey: "AIzaSyC-axJOwivMy-bGhNmVIHaXORcG90gLA9g",
+        authDomain: "registration-c78dc.firebaseapp.com",
+        projectId: "registration-c78dc",
+        storageBucket: "registration-c78dc.firebasestorage.app",
+        messagingSenderId: "368136278543",
+        appId: "1:368136278543:web:03a46a62d1095f40a0497a",
+        measurementId: "G-14V6C8VSCH"
+    };
+    
+    let firebaseConfig = providedFirebaseConfig;
+    if (typeof __firebase_config !== 'undefined' && __firebase_config !== '') {
+        try {
+            // Attempt to parse the environment variable config first
+            firebaseConfig = JSON.parse(__firebase_config);
+        } catch (e) {
+            console.warn("Could not parse __firebase_config environment variable, using manual configuration as fallback.");
+        }
+    }
+    
+    if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
         try {
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             auth = getAuth(app);
-            isDatabaseReady = true; // Set flag to true only upon successful initialization
+            isDatabaseReady = true; 
         } catch (e) {
             console.error("Firebase Initialization Failed:", e);
             // isDatabaseReady remains false if init fails
         }
     }
+
 
     const COLLECTION_PATH = `/artifacts/${appId}/public/data/registrations`;
     // --- ADMIN PASSWORD ---
@@ -669,7 +693,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
      */
     async function toggleFinalistStatus(docId, currentStatus) {
         if (!isDatabaseReady) { // Check database status
-            showMessageBox('Database is not initialized. Please ensure Firebase configuration is provided.', 'error');
+            showMessageBox('Database is not initialized. Registration failed.', 'error');
             return;
         }
         try {
@@ -684,7 +708,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
     async function saveRegistration(data, docId = null) {
         if (!isDatabaseReady) { // Check database status
-            showMessageBox('Database is not initialized. Please ensure Firebase configuration is provided.', 'error');
+            showMessageBox('Database is not initialized. Registration failed.', 'error');
             return;
         }
         
@@ -715,7 +739,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
     async function deleteRegistration(docId) {
         if (!isDatabaseReady) { // Check database status
-            showMessageBox('Database is not initialized. Please ensure Firebase configuration is provided.', 'error');
+            showMessageBox('Database is not initialized. Deletion failed.', 'error');
             return;
         }
         try {
@@ -1316,7 +1340,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         } else {
              // Handle the case where the database is not ready
              console.error("Firebase is not configured or failed to initialize. Database operations are disabled.");
-             showMessageBox('App Offline: Database configuration is missing. Submissions are disabled.', 'error');
+             showMessageBox('App Offline: Database configuration is missing or invalid. Submissions are disabled.', 'error');
              submitBtn.disabled = true;
              adminBtn.disabled = true;
         }
