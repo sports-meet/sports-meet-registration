@@ -68,24 +68,28 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
 /* --- PRINT/PDF STYLING --- */
 @media print {
+    /* Force fit to one page by tightening everything */
+    @page { margin: 1cm !important; }
+
     /* Hide everything that is not the print-area or its children */
     body > *:not(#printArea):not(#printArea *) {
         display: none !important;
     }
+    
     /* Ensure the print area is visible and takes full width */
     #printArea {
         display: block !important;
         width: 100% !important;
-        margin: 0 auto !important;
+        margin: 0 !important;
         padding: 0 !important;
-        max-width: 700px; /* Limit print width to A4 size */
+        max-width: 21cm; /* Limit print width to A4 size */
         background-color: white !important;
     }
     /* Remove shadows/borders/backgrounds for clean PDF look */
     #printArea .app-card {
         box-shadow: none !important;
         border: none !important;
-        padding: 40px !important; /* Add margins for print */
+        padding: 10px !important; /* Reduced padding for more space */
         background-color: white !important;
     }
     /* Ensure text colors are black for printing */
@@ -102,16 +106,16 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     #printArea header h1 {
         font-weight: 800 !important;
         text-align: center !important;
-        font-size: 1.1rem;
-        line-height: 1.2;
+        font-size: 1rem; /* Smaller font */
+        line-height: 1.1;
     }
      /* Sports Meet Title (Centered, smaller) */
     #printArea header h2 {
         text-align: center !important;
-        font-size: 1rem;
+        font-size: 0.9rem; /* Smaller font */
         font-weight: 700 !important;
-        margin-bottom: 20px;
-        padding-bottom: 10px;
+        margin-bottom: 10px; /* Reduced margin */
+        padding-bottom: 5px; /* Reduced padding */
         border-bottom: 2px solid #333;
     }
     
@@ -119,40 +123,33 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     .print-info-section p {
         display: flex;
         align-items: flex-end;
-        margin-bottom: 10px;
-        font-size: 0.95rem;
+        margin-bottom: 5px; /* Reduced margin */
+        font-size: 0.85rem; /* Smaller font */
     }
     .print-info-section .grid {
         display: flex;
-        gap: 20px;
-    }
-    .print-info-section .grid p {
-        flex: 1 1 50%;
-    }
-    .print-info-section span.font-bold {
-        flex-grow: 1; /* Allow value to take space */
-        min-width: 100px;
-        border-bottom: 1px solid #333;
-        padding-left: 8px;
-        font-weight: 400 !important;
-    }
-    
-    /* Allow/Signature Lines */
-    .print-signature-line {
-        display: inline-block;
-        width: 45% !important;
-        border-bottom: 1px solid #333;
+        gap: 10px; /* Reduced gap */
     }
     
     /* Events List */
     #printArea .events-list-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        margin-left: 20px;
+        gap: 5px; /* Reduced gap */
+        margin-left: 10px; /* Reduced margin */
     }
     #printArea .events-list-grid > div {
-        font-size: 0.9rem;
+        font-size: 0.8rem; /* Smaller font */
+    }
+
+    /* Reduce vertical padding in sections */
+    .print-info-section, .border-t, .pt-4 {
+        padding-top: 10px !important;
+        margin-top: 10px !important;
+    }
+    .space-y-8 {
+        --space-y-reverse: 0;
+        margin-top: 0;
     }
 }
 </style>
@@ -377,7 +374,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
     // --- Firebase Initialization with Explicit Configuration ---
     
-    let db, auth; // Removed global userId to avoid confusion, relying on auth.currentUser
+    let db, auth; 
     let isDatabaseReady = false; 
 
     // Retrieve global IDs
@@ -385,7 +382,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
     
     // Explicit Firebase Configuration provided by the user
-    // NOTE: In a real app, this should be kept secret. It's exposed here for platform functionality.
     const hardcodedFirebaseConfig = {
         apiKey: "AIzaSyC-axJOwivMy-bGhNmVIHaXORcG90gLA9g",
         authDomain: "registration-c78dc.firebaseapp.com",
@@ -421,7 +417,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         console.error("Firebase Initialization Failed: Configuration is incomplete.");
     }
 
-
+    // MANDATORY: Use the public path for shared data
     const COLLECTION_PATH = `/artifacts/${appId}/public/data/registrations`;
     // --- ADMIN PASSWORD ---
     const ADMIN_PASSWORD = "SUN2025"; 
@@ -447,7 +443,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         },
         "Senior": {
             maxEvents: 4,
-            events: ["400m Run", "800m Run", "Javelin Throw", "Triple Jump", "Relay Race"]
+            events: ["400m Run", "800m Run", "Triple Jump", "Discus Throw", "Relay Race"]
         },
         "Super Senior": {
             maxEvents: 4,
@@ -719,15 +715,22 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 await setDoc(doc(db, COLLECTION_PATH, docId), data);
                 showMessageBox('Registration updated successfully!', 'success');
             } else {
-                // New Student Registration
-                // Check for duplicate GR Number (One-time registration enforcement)
-                const existing = allRegistrations.find(reg => reg.grNo === data.grNo);
-                if (existing) {
-                    showMessageBox(`Error: GR Number ${data.grNo} is already registered. Only one submission is allowed.`, 'error');
+                // New Student Registration: CHECK FOR DUPLICATES
+                const normalizedName = data.name.toLowerCase().trim();
+                
+                const existingGrNo = allRegistrations.find(reg => reg.grNo === data.grNo);
+                if (existingGrNo) {
+                    showMessageBox(`Error: The GR Number ${data.grNo} is already registered by ${existingGrNo.name}. Only one submission is allowed per student.`, 'error');
                     return;
                 }
                 
-                // Firestore V9 equivalent of db.collection("registrations").add({...})
+                const existingName = allRegistrations.find(reg => reg.name.toLowerCase().trim() === normalizedName);
+                if (existingName) {
+                    showMessageBox(`Error: The name "${data.name}" is already registered. Only one submission is allowed per student.`, 'error');
+                    return;
+                }
+                
+                // If no duplicates found, proceed with new registration
                 await addDoc(collection(db, COLLECTION_PATH), data); 
                 showMessageBox('Registration submitted successfully!', 'success');
                 lastSubmittedData = data; // Store data for PDF download
@@ -1166,10 +1169,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             const editingId = submitBtn.dataset.editingId;
             const reg = editingId ? allRegistrations.find(r => r.id === editingId) : {}; 
             
-            // --- FIX START: Safely determine the user ID for Firestore submission ---
-            // If auth is initialized, get the UID; otherwise, generate a unique anonymous ID.
+            // Safely determine the user ID for Firestore submission
             const currentUserId = auth?.currentUser?.uid || ('anonymous_' + Math.random().toString(36).substring(2, 9));
-            // --- FIX END ---
 
 
             const name = document.getElementById('name').value.trim();
@@ -1225,7 +1226,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                     'bg-blue-600'
                 );
             } else {
-                // New record (One-time check is inside saveRegistration)
+                // New record (Duplicate checks are performed inside saveRegistration)
                 showConfirmationModal(
                     'Confirm Registration',
                     `Please confirm registration details for ${name}. You have selected ${selectedEvents.length} events.`,
