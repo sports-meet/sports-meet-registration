@@ -377,7 +377,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
     // --- Firebase Initialization with Explicit Configuration ---
     
-    let db, auth, userId;
+    let db, auth; // Removed global userId to avoid confusion, relying on auth.currentUser
     let isDatabaseReady = false; 
 
     // Retrieve global IDs
@@ -1165,6 +1165,12 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             const submitBtn = sportsForm.querySelector('button[type="submit"]');
             const editingId = submitBtn.dataset.editingId;
             const reg = editingId ? allRegistrations.find(r => r.id === editingId) : {}; 
+            
+            // --- FIX START: Safely determine the user ID for Firestore submission ---
+            // If auth is initialized, get the UID; otherwise, generate a unique anonymous ID.
+            const currentUserId = auth?.currentUser?.uid || ('anonymous_' + Math.random().toString(36).substring(2, 9));
+            // --- FIX END ---
+
 
             const name = document.getElementById('name').value.trim();
             const grNo = document.getElementById('grNo').value.trim();
@@ -1205,7 +1211,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 category,
                 events: selectedEvents,
                 isFinalist: reg.isFinalist || false, 
-                registeredBy: userId,
+                registeredBy: currentUserId, // Use the guaranteed string ID
                 timestamp: Date.now()
             };
 
@@ -1291,12 +1297,13 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         initializeListeners(); 
         
         const submitBtn = sportsForm.querySelector('button[type="submit"]');
+        let userId; // Local variable for use inside onAuthStateChanged
 
         // 1. Authentication and Firestore setup
         if (isDatabaseReady) { // ONLY proceed if Firebase initialized successfully
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    userId = user.uid;
+                    userId = user.uid; // Set the UID for use in onSnapshot
                     const q = query(collection(db, COLLECTION_PATH));
                     
                     // Start real-time listener for registrations
