@@ -6,6 +6,9 @@
 <title>Sunrise Sports Meet Registration</title>
 <!-- WARNING: Using CDN for Tailwind CSS is for development only. For production, install Tailwind CSS as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation -->
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- Add html2pdf and SheetJS libraries for PDF and XLSX generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 body {
     background-color: #f8f9fa;
@@ -66,20 +69,20 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
 /* --- PRINT/PDF STYLING --- */
 @media print {
-    @page { margin: 1cm !important; }
+    @page { margin: 0.5cm !important; size: A4; }
     body > *:not(#printArea):not(#printArea *) { display: none !important; }
     #printArea { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; max-width: 21cm; background-color: white !important; }
-    #printArea .app-card { box-shadow: none !important; border: none !important; padding: 10px !important; background-color: white !important; }
-    #printArea * { color: black !important; background-color: white !important; }
+    #printArea .app-card { box-shadow: none !important; border: none !important; padding: 5px !important; background-color: white !important; }
+    #printArea * { color: black !important; background-color: white !important; font-size: 0.75rem !important; line-height: 1 !important; }
+    #printArea header h1 { font-weight: 800 !important; text-align: center !important; font-size: 0.9rem !important; line-height: 1 !important; margin: 0 !important; padding: 0 !important; }
+    #printArea header h2 { text-align: center !important; font-size: 0.7rem !important; font-weight: 700 !important; margin: 2px 0 !important; padding: 0 !important; border-bottom: 1px solid #333 !important; }
+    .print-info-section p { display: flex !important; align-items: flex-end !important; margin: 2px 0 !important; font-size: 0.65rem !important; }
+    .print-info-section .grid { display: flex !important; gap: 5px !important; }
+    #printArea .events-list-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 2px !important; margin-left: 5px !important; }
+    #printArea .events-list-grid > div { font-size: 0.6rem !important; }
+    .print-info-section, .border-t, .pt-4 { padding-top: 5px !important; margin-top: 5px !important; }
+    .space-y-8 { --space-y-reverse: 0; margin-top: 0 !important; }
     #savePdfBtn, #doneBtn { display: none !important; }
-    #printArea header h1 { font-weight: 800 !important; text-align: center !important; font-size: 1rem; line-height: 1.1; }
-    #printArea header h2 { text-align: center !important; font-size: 0.9rem; font-weight: 700 !important; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #333; }
-    .print-info-section p { display: flex; align-items: flex-end; margin-bottom: 5px; font-size: 0.85rem; }
-    .print-info-section .grid { display: flex; gap: 10px; }
-    #printArea .events-list-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-left: 10px; }
-    #printArea .events-list-grid > div { font-size: 0.8rem; }
-    .print-info-section, .border-t, .pt-4 { padding-top: 10px !important; margin-top: 10px !important; }
-    .space-y-8 { --space-y-reverse: 0; margin-top: 0; }
 }
 </style>
 </head>
@@ -241,8 +244,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-2 border-t border-gray-100">
             <p id="totalRegistrations" class="text-lg font-bold text-gray-700 p-3 bg-gray-100 rounded-xl whitespace-nowrap"></p>
             <div class="flex space-x-3 w-full sm:w-auto">
-                <button id="downloadCsvBtn" class="app-button app-button-green text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Filtered CSV</button>
-                <button id="downloadFinalistsCsvBtn" class="app-button app-button-blue text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Finalists CSV</button>
+                <button id="downloadCsvBtn" class="app-button app-button-green text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Filtered XLSX</button>
+                <button id="downloadFinalistsCsvBtn" class="app-button app-button-blue text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Finalists XLSX</button>
                 <button id="clearFiltersBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Clear Filters</button>
             </div>
         </div>
@@ -281,7 +284,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
     let db, auth;
     let isDatabaseReady = false;
-    let isAdmin = false; // Track admin status
+    let isAdmin = false;
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -528,7 +531,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 showMessageBox('Registration updated successfully!', 'success');
             } else {
                 const sessionKey = getSessionKey();
-                const existingSession = allRegistrations.find(reg => reg.sessionKey === sessionKey && !isAdmin); // Only check for non-admin users
+                const existingSession = allRegistrations.find(reg => reg.sessionKey === sessionKey && !isAdmin);
                 if (existingSession && !isAdmin) {
                     showMessageBox('You have already registered from this device. Only one submission is allowed per device unless you are an admin.', 'error');
                     return;
@@ -548,12 +551,12 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                     showMessageBox('You have already registered. Only one submission is allowed per user unless you are an admin.', 'error');
                     return;
                 }
-                data.sessionKey = sessionKey; // Add session key to the registration data
+                data.sessionKey = sessionKey;
                 if (!isAdmin) {
-                    localStorage.setItem('registrationCompleted', 'true'); // Mark registration as completed for non-admins
+                    localStorage.setItem('registrationCompleted', 'true');
                 }
                 const docRef = await addDoc(collection(db, COLLECTION_PATH), data);
-                userRegistrationKey = docRef.id; // Store the registration key after successful submission
+                userRegistrationKey = docRef.id;
                 showMessageBox('Registration submitted successfully!', 'success');
                 lastSubmittedData = data;
                 toggleView('summary');
@@ -573,9 +576,9 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             await deleteDoc(doc(db, COLLECTION_PATH, docId));
             showMessageBox('Registration deleted successfully.', 'success');
             if (userRegistrationKey === docId) {
-                userRegistrationKey = null; // Clear the registration key if the user's registration is deleted
+                userRegistrationKey = null;
                 if (!isAdmin) {
-                    localStorage.removeItem('registrationCompleted'); // Allow re-registration if deleted by admin for non-admins
+                    localStorage.removeItem('registrationCompleted');
                 }
             }
         } catch (e) {
@@ -818,13 +821,13 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         summaryDetails.innerHTML = headerHtml + fullContent;
     }
 
-    function downloadCSV(data, filename = "sports_registrations_filtered.csv") {
+    function downloadXLSX(data, filename = "sports_registrations_filtered.xlsx") {
         if (data.length === 0) {
             showMessageBox('No data to download. Please ensure your filters return results.', 'error');
             return;
         }
         const headers = ["ID", "Name", "GR No", "Class", "Division", "House", "DOB", "Category", "Events", "Finalist Status", "Registered By", "Timestamp", "Session Key"];
-        let csv = headers.join(',') + '\n';
+        const worksheetData = [headers];
         data.forEach(reg => {
             const row = [
                 reg.id,
@@ -835,15 +838,20 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 reg.house,
                 reg.dob,
                 reg.category,
-                `"${reg.events.join('; ')}"`,
+                reg.events.join('; '),
                 reg.isFinalist ? 'Yes' : 'No',
                 reg.registeredBy,
                 new Date(reg.timestamp).toLocaleString(),
                 reg.sessionKey
             ];
-            csv += row.map(item => typeof item === 'string' ? `"${item.replace(/"/g, '""')}"` : item).join(',') + '\n';
+            worksheetData.push(row);
         });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+        XLSX.utils.book_append_sheet(wb, ws, "Registrations");
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
@@ -852,7 +860,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        showMessageBox(`Downloaded ${data.length} records to CSV.`, 'success');
+        showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
     }
 
     function openAdminLoginModal() {
@@ -871,7 +879,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     function handleAdminLogin() {
         const enteredPassword = adminPasswordInput.value.trim();
         if (enteredPassword === ADMIN_PASSWORD) {
-            isAdmin = true; // Set admin status
+            isAdmin = true;
             closeAdminLoginModal();
             toggleView('admin');
             adminPasswordInput.value = '';
@@ -961,7 +969,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         adminBtn.addEventListener('click', () => {
             const isCurrentlyAdmin = !adminPanel.classList.contains('hidden');
             if (isCurrentlyAdmin) {
-                isAdmin = false; // Reset admin status when leaving admin panel
+                isAdmin = false;
                 toggleView('form');
             } else {
                 openAdminLoginModal();
@@ -976,7 +984,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             }
         });
         backToFormBtn.addEventListener('click', () => {
-            isAdmin = false; // Reset admin status when returning to form
+            isAdmin = false;
             toggleView('form');
         });
         adminSearch.addEventListener('input', filterAdminData);
@@ -991,22 +999,29 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             filterAdminData();
         });
         downloadCsvBtn.addEventListener('click', () => {
-            let filename = "sports_registrations_filtered.csv";
+            let filename = "sports_registrations_filtered.xlsx";
             if (filterCategory.value) {
-                filename = `sports_registrations_${filterCategory.value}.csv`;
+                filename = `sports_registrations_${filterCategory.value}.xlsx`;
             }
-            downloadCSV(filteredRegistrations, filename);
+            downloadXLSX(filteredRegistrations, filename);
         });
         downloadFinalistsCsvBtn.addEventListener('click', () => {
             const finalists = filteredRegistrations.filter(reg => reg.isFinalist);
-            let filename = "sports_registrations_finalists.csv";
+            let filename = "sports_registrations_finalists.xlsx";
             if (filterCategory.value) {
-                filename = `sports_registrations_finalists_${filterCategory.value}.csv`;
+                filename = `sports_registrations_finalists_${filterCategory.value}.xlsx`;
             }
-            downloadCSV(finalists, filename);
+            downloadXLSX(finalists, filename);
         });
         savePdfBtn.addEventListener('click', () => {
-            window.print();
+            const element = printArea;
+            html2pdf().from(element).set({
+                margin: [0.5, 0.5, 0.5, 0.5],
+                filename: `registration_${lastSubmittedData?.grNo || 'summary'}_${new Date().toISOString().slice(0, 10)}.pdf`,
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
+            }).save();
+            showMessageBox('PDF downloaded successfully!', 'success');
         });
         doneBtn.addEventListener('click', () => {
             toggleView('form');
@@ -1028,7 +1043,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                             isFinalist: doc.data().isFinalist || false,
                             ...doc.data()
                         }));
-                        // Check if the current user has already registered
                         const userRegistrations = allRegistrations.filter(reg => reg.registeredBy === userId);
                         if (userRegistrations.length > 0 && !isAdmin) {
                             userRegistrationKey = userRegistrations[0].id;
@@ -1081,7 +1095,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             adminBtn.disabled = true;
         }
 
-        // Check if registration is already completed for this device (only for non-admins)
         if (localStorage.getItem('registrationCompleted') && !isAdmin) {
             submitBtn.disabled = true;
             toggleView('form');
