@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sunrise Sports Meet Registration</title>
+<!-- WARNING: Using CDN for Tailwind CSS is for development only. For production, install Tailwind CSS as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation -->
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 body {
     background-color: #f8f9fa;
@@ -120,10 +120,10 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         
         <div id="submissionCompleteMessage" class="hidden text-center p-8 border-4 border-dashed border-green-300 rounded-2xl bg-green-50 shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-20 w-20 text-green-500 mb-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
             <h3 class="text-3xl font-extrabold text-green-700 mb-2">Registration Complete!</h3>
-            <p class="text-lg text-gray-700 mb-4">Your registration has been successfully submitted and saved. A student may only register once.</p>
+            <p class="text-lg text-gray-700 mb-4">Your registration has been successfully submitted and saved. A student may only register once from this device unless you are an admin.</p>
             <p class="text-md text-gray-500 font-medium">Please contact the Admin if you need to make changes.</p>
         </div>
 
@@ -195,7 +195,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 <p id="eventNote" class="text-sm text-gray-600 mt-4 font-medium"></p>
             </div>
 
-            <button type="submit" class="app-button app-button-primary mt-10 w-full">Submit Registration</button>
+            <button type="submit" class="app-button app-button-primary mt-10 w-full" id="submitBtn">Submit Registration</button>
         </form>
     </div>
 </div>
@@ -241,7 +241,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-2 border-t border-gray-100">
             <p id="totalRegistrations" class="text-lg font-bold text-gray-700 p-3 bg-gray-100 rounded-xl whitespace-nowrap"></p>
             <div class="flex space-x-3 w-full sm:w-auto">
-                <button id="downloadCsvBtn" class="app-button app-button-green text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download CSV</button>
+                <button id="downloadCsvBtn" class="app-button app-button-green text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Filtered CSV</button>
+                <button id="downloadFinalistsCsvBtn" class="app-button app-button-blue text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Finalists CSV</button>
                 <button id="clearFiltersBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Clear Filters</button>
             </div>
         </div>
@@ -268,7 +269,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     </div>
 </div>
 
-<button id="adminBtn" class="fixed bottom-6 right-6 bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-full shadow-xl text-sm font-semibold transform hover:scale-105 z-50" aria-label="Open admin panel">
+<button id="adminBtn" class="fixed bottom-6 right-6 bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-full shadow-xl text-sm font-semibold transform hover:scale-105 z-50">
     Admin Panel
 </button>
 
@@ -280,6 +281,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
     let db, auth;
     let isDatabaseReady = false;
+    let isAdmin = false; // Track admin status
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -326,11 +328,11 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const CUTOFF_2010 = '2010-01-01';
 
     const SPORTS_EVENTS = {
-        "Sub Junior": { maxEvents: 2, events: ["50m Dash", "100m Dash", "Long Jump", "Softball Throw"] },
-        "Junior": { maxEvents: 3, events: ["100m Dash", "200m Run", "High Jump", "Shot Put"] },
-        "Inter": { maxEvents: 3, events: ["200m Run", "400m Run", "Triple Jump", "Discus Throw", "4x100m Relay"] },
-        "Senior": { maxEvents: 4, events: ["400m Run", "800m Run", "Triple Jump", "Discus Throw", "Relay Race"] },
-        "Super Senior": { maxEvents: 4, events: ["800m Run", "1500m Run", "Shot Put", "Javelin Throw", "4x400m Relay"] }
+        "Sub Junior": { maxEvents: 2, events: ["100m", "200m", "Long Jump"] },
+        "Junior": { maxEvents: 3, events: ["100m", "200m", "Long Jump", "400m"] },
+        "Inter": { maxEvents: 3, events: ["100m", "200m", "800m", "Long Jump", "Shot Put (4kg)"] },
+        "Senior": { maxEvents: 4, events: ["100m", "200m", "400m", "800m", "Long Jump", "Shot Put", "1500m"] },
+        "Super Senior": { maxEvents: 4, events: ["100m", "200m", "400m", "800m", "Long Jump", "Shot Put", "1500m"] }
     };
 
     const mainContainer = document.getElementById('mainContainer');
@@ -351,6 +353,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const filterClass = document.getElementById('filterClass');
     const filterEvent = document.getElementById('filterEvent');
     const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+    const downloadFinalistsCsvBtn = document.getElementById('downloadFinalistsCsvBtn');
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
     const modal = document.getElementById('confirmationModal');
     const modalTitle = document.getElementById('modalTitle');
@@ -368,10 +371,22 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const summaryDetails = document.getElementById('summaryDetails');
     const savePdfBtn = document.getElementById('savePdfBtn');
     const doneBtn = document.getElementById('doneBtn');
+    const submitBtn = document.getElementById('submitBtn');
 
     let allRegistrations = [];
     let filteredRegistrations = [];
     let lastSubmittedData = null;
+    let userRegistrationKey = null;
+
+    // Generate or retrieve a unique session key for the device
+    function getSessionKey() {
+        let sessionKey = localStorage.getItem('registrationSessionKey');
+        if (!sessionKey) {
+            sessionKey = crypto.randomUUID();
+            localStorage.setItem('registrationSessionKey', sessionKey);
+        }
+        return sessionKey;
+    }
 
     function showMessageBox(message, type) {
         messageBox.textContent = message;
@@ -416,6 +431,11 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
     function calculateCategory(dobString) {
         if (!dobString) return '';
+        const dobYear = parseInt(dobString.split('-')[0]);
+        const currentYear = 2025; // Current year as per the date
+        if (dobYear < 1900 || dobYear > currentYear) {
+            return 'invalid';
+        }
         if (dobString >= CUTOFF_2017) return "Sub Junior";
         else if (dobString >= CUTOFF_2015 && dobString < CUTOFF_2017) return "Junior";
         else if (dobString >= CUTOFF_2013 && dobString < CUTOFF_2015) return "Inter";
@@ -507,6 +527,12 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 await setDoc(doc(db, COLLECTION_PATH, docId), data);
                 showMessageBox('Registration updated successfully!', 'success');
             } else {
+                const sessionKey = getSessionKey();
+                const existingSession = allRegistrations.find(reg => reg.sessionKey === sessionKey && !isAdmin); // Only check for non-admin users
+                if (existingSession && !isAdmin) {
+                    showMessageBox('You have already registered from this device. Only one submission is allowed per device unless you are an admin.', 'error');
+                    return;
+                }
                 const normalizedName = data.name.toLowerCase().trim();
                 const existingGrNo = allRegistrations.find(reg => reg.grNo === data.grNo);
                 if (existingGrNo) {
@@ -518,7 +544,16 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                     showMessageBox(`Error: The name "${data.name}" is already registered. Only one submission is allowed per student.`, 'error');
                     return;
                 }
-                await addDoc(collection(db, COLLECTION_PATH), data);
+                if (userRegistrationKey && !isAdmin) {
+                    showMessageBox('You have already registered. Only one submission is allowed per user unless you are an admin.', 'error');
+                    return;
+                }
+                data.sessionKey = sessionKey; // Add session key to the registration data
+                if (!isAdmin) {
+                    localStorage.setItem('registrationCompleted', 'true'); // Mark registration as completed for non-admins
+                }
+                const docRef = await addDoc(collection(db, COLLECTION_PATH), data);
+                userRegistrationKey = docRef.id; // Store the registration key after successful submission
                 showMessageBox('Registration submitted successfully!', 'success');
                 lastSubmittedData = data;
                 toggleView('summary');
@@ -537,6 +572,12 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         try {
             await deleteDoc(doc(db, COLLECTION_PATH, docId));
             showMessageBox('Registration deleted successfully.', 'success');
+            if (userRegistrationKey === docId) {
+                userRegistrationKey = null; // Clear the registration key if the user's registration is deleted
+                if (!isAdmin) {
+                    localStorage.removeItem('registrationCompleted'); // Allow re-registration if deleted by admin for non-admins
+                }
+            }
         } catch (e) {
             console.error("Error deleting document: ", e);
             showMessageBox('Failed to delete registration.', 'error');
@@ -553,9 +594,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         });
         const populateSelect = (selectEl, values) => {
             const currentSelected = selectEl.value;
-            // Preserve the default option's text if present
-            const defaultOptionText = selectEl.querySelector('option[value=""]') ? selectEl.querySelector('option[value=""]').textContent : 'All';
-            selectEl.innerHTML = `<option value="">${defaultOptionText}</option>`;
+            selectEl.innerHTML = selectEl.querySelector('option[value=""]') ? '<option value="">' + selectEl.querySelector('option[value=""]').textContent + '</option>' : '<option value="">All</option>';
             const sortedValues = Array.from(values).sort((a, b) => (selectEl.id === 'filterClass' ? parseInt(a) - parseInt(b) : a.localeCompare(b)));
             sortedValues.forEach(value => {
                 if (value) {
@@ -606,7 +645,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 <td>${reg.category}</td>
                 <td>${reg.events.join(', ')}</td>
                 <td class="text-center">
-                    <button data-id="${reg.id}" data-status="${isFinalist}" class="finalist-toggle-btn text-sm font-medium transition duration-150 rounded-full px-3 py-1 ${isFinalist ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}">
+                    <button data-id="${reg.id}" data-status="${isFinalist}" class="finalist-toggle-btn text-sm font-medium transition duration-150 rounded-full px-3 py-1 ${isFinalist ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}">
                         ${isFinalist ? 'Finalist' : 'Select'}
                     </button>
                 </td>
@@ -660,28 +699,23 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     }
 
     function toggleView(view) {
-        // Hide everything first
         mainContainer.classList.add('hidden');
         adminPanel.classList.add('hidden');
         printArea.classList.add('hidden');
-
-        // Make sure admin button is visible by default unless summary view
         adminBtn.classList.remove('hidden');
-
         if (view === 'admin') {
             adminPanel.classList.remove('hidden');
             adminBtn.textContent = 'Back to Registration';
-            // Use remove/add instead of replace to avoid silent failure if class not present
-            adminBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
-            adminBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            adminBtn.classList.replace('bg-red-500', 'bg-blue-500');
+            adminBtn.classList.replace('hover:bg-red-600', 'hover:bg-blue-600');
             filterAdminData();
         } else if (view === 'form') {
             mainContainer.classList.remove('hidden');
             adminBtn.textContent = 'Admin Panel';
-            adminBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-            adminBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+            adminBtn.classList.replace('bg-blue-500', 'bg-red-500');
+            adminBtn.classList.replace('hover:bg-blue-600', 'hover:bg-red-600');
             const isEditing = sportsForm.querySelector('button[type="submit"]').dataset.editingId;
-            if (lastSubmittedData && !isEditing) {
+            if (lastSubmittedData && !isEditing && localStorage.getItem('registrationCompleted') && !isAdmin) {
                 sportsForm.classList.add('hidden');
                 submissionCompleteMessage.classList.remove('hidden');
             } else {
@@ -693,7 +727,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 const submitBtn = sportsForm.querySelector('button[type="submit"]');
                 submitBtn.textContent = 'Submit Registration';
                 delete submitBtn.dataset.editingId;
-                if (!isDatabaseReady) submitBtn.disabled = true;
+                if (!isDatabaseReady || (localStorage.getItem('registrationCompleted') && !isAdmin)) submitBtn.disabled = true;
                 else submitBtn.disabled = false;
             }
         } else if (view === 'summary') {
@@ -732,20 +766,15 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             <div class="mt-8">
         `;
         const studentDetailsHtml = `
-            <div class="print-info-section">
-  <div class="form-line">
-    <span class="field">Full Name of Student: <span class="underline">${data.name || ' '}</span></span>
-    <span class="field">Class: <span class="underline">${data.class || ' '}</span></span>
-    <span class="field">Division: <span class="underline">${data.division || ' '}</span></span>
-  </div>
-
-  <div class="form-line">
-    <span class="field">D.O.B: <span class="underline">${data.dob || ' '}</span></span>
-    <span class="field">G.R. No: <span class="underline">${data.grNo || ' '}</span></span>
-    <span class="field">Sports House: <span class="underline">${data.house || ' '}</span></span>
-    <span class="field">Category: <span class="underline">${data.category || ' '}</span></span>
-  </div>
-</div>
+            <div class="print-info-section space-y-4">
+                ${line('Full Name of the student', data.name)}
+                ${line('Class', data.class)}
+                ${line('Division', data.division)}
+                ${line('Date of Birth (As per school record)', data.dob)}
+                ${line('GR NO', data.grNo)}
+                ${line('Sports House', data.house)}
+                ${line('CATEGORY', data.category)}
+            </div>
         `;
         const noteHtml = `
             <div class="mt-8 border-t border-gray-300 pt-4">
@@ -753,6 +782,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 <ul class="list-disc list-inside ml-4 text-sm space-y-1 text-gray-700">
                     <li>House-wise relay (4x100) for inter, senior, and super senior categories only.</li>
                     <li>Track event selection: Athletes will be selected based on their timing performance.</li>
+                    <li>A time trial will be conducted.</li>
                     <li>The top 8 athletes with the best times will qualify for the finals.</li>
                     <li><span class="font-bold text-red-700">Entry Submission:</span> All entries must be submitted on or before 24th October 2025.</li>
                 </ul>
@@ -788,43 +818,41 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         summaryDetails.innerHTML = headerHtml + fullContent;
     }
 
-    function downloadCSV(data) {
+    function downloadCSV(data, filename = "sports_registrations_filtered.csv") {
         if (data.length === 0) {
             showMessageBox('No data to download. Please ensure your filters return results.', 'error');
             return;
         }
-       // Define headers
-const headers = ["ID", "Name", "GR No", "Class", "Division", "House", "DOB", "Category", "Events", "Finalist Status", "Registered By", "Timestamp"];
-
-// Prepare data rows
-const rows = data.map(reg => [
-    reg.id,
-    reg.name,
-    reg.grNo,
-    reg.class,
-    reg.division,
-    reg.house,
-    reg.dob,
-    reg.category,
-    reg.events.join('; '),
-    reg.isFinalist ? 'Yes' : 'No',
-    reg.registeredBy,
-    reg.timestamp ? new Date(reg.timestamp).toLocaleString() : ''
-]);
-
-// Combine headers + data
-const worksheetData = [headers, ...rows];
-
-// Create worksheet and workbook
-const ws = XLSX.utils.aoa_to_sheet(worksheetData);
-const wb = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb, ws, "Registrations");
-
-// Export to XLSX file
-XLSX.writeFile(wb, "sports_registrations_filtered.xlsx");
-
-// Optional success message
-showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
+        const headers = ["ID", "Name", "GR No", "Class", "Division", "House", "DOB", "Category", "Events", "Finalist Status", "Registered By", "Timestamp", "Session Key"];
+        let csv = headers.join(',') + '\n';
+        data.forEach(reg => {
+            const row = [
+                reg.id,
+                reg.name,
+                reg.grNo,
+                reg.class,
+                reg.division,
+                reg.house,
+                reg.dob,
+                reg.category,
+                `"${reg.events.join('; ')}"`,
+                reg.isFinalist ? 'Yes' : 'No',
+                reg.registeredBy,
+                new Date(reg.timestamp).toLocaleString(),
+                reg.sessionKey
+            ];
+            csv += row.map(item => typeof item === 'string' ? `"${item.replace(/"/g, '""')}"` : item).join(',') + '\n';
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showMessageBox(`Downloaded ${data.length} records to CSV.`, 'success');
     }
 
     function openAdminLoginModal() {
@@ -843,9 +871,11 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
     function handleAdminLogin() {
         const enteredPassword = adminPasswordInput.value.trim();
         if (enteredPassword === ADMIN_PASSWORD) {
+            isAdmin = true; // Set admin status
             closeAdminLoginModal();
             toggleView('admin');
             adminPasswordInput.value = '';
+            showMessageBox('Admin login successful. You can now register multiple times for testing.', 'success');
         } else {
             passwordError.classList.remove('hidden');
             adminPasswordInput.classList.add('animate-shake');
@@ -855,35 +885,17 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
     }
 
     function initializeListeners() {
-        // Admin button: open login modal OR go back to form when admin panel visible
-        adminBtn.addEventListener('click', () => {
-            const isCurrentlyAdmin = !adminPanel.classList.contains('hidden');
-            if (isCurrentlyAdmin) toggleView('form');
-            else openAdminLoginModal();
-        });
-
-        // Admin login modal controls
-        loginCancelBtn.addEventListener('click', closeAdminLoginModal);
-        loginSubmitBtn.addEventListener('click', handleAdminLogin);
-
-        adminPasswordInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleAdminLogin();
-            }
-        });
-
-        // Back button in admin panel
-        backToFormBtn.addEventListener('click', () => toggleView('form'));
-
-        // DOB changes -> re-calc category & events
         dobInput.addEventListener('change', () => {
             const category = calculateCategory(dobInput.value);
-            categoryInput.value = category;
-            renderEvents(category);
+            if (category === 'invalid') {
+                categoryInput.value = '';
+                showMessageBox('Please enter a valid Date of Birth.', 'error');
+                eventsSection.classList.add('hidden');
+            } else {
+                categoryInput.value = category;
+                renderEvents(category);
+            }
         });
-
-        // Form submit
         sportsForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const submitBtn = sportsForm.querySelector('button[type="submit"]');
@@ -902,7 +914,7 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
                 showMessageBox('GR Number must be exactly 5 digits.', 'error');
                 return;
             }
-            if (!category) {
+            if (!category || category === 'invalid') {
                 showMessageBox('Please enter a valid Date of Birth to determine the category.', 'error');
                 return;
             }
@@ -946,8 +958,27 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
                 );
             }
         });
-
-        // Admin filters & search
+        adminBtn.addEventListener('click', () => {
+            const isCurrentlyAdmin = !adminPanel.classList.contains('hidden');
+            if (isCurrentlyAdmin) {
+                isAdmin = false; // Reset admin status when leaving admin panel
+                toggleView('form');
+            } else {
+                openAdminLoginModal();
+            }
+        });
+        loginCancelBtn.addEventListener('click', closeAdminLoginModal);
+        loginSubmitBtn.addEventListener('click', handleAdminLogin);
+        adminPasswordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAdminLogin();
+            }
+        });
+        backToFormBtn.addEventListener('click', () => {
+            isAdmin = false; // Reset admin status when returning to form
+            toggleView('form');
+        });
         adminSearch.addEventListener('input', filterAdminData);
         filterCategory.addEventListener('change', filterAdminData);
         filterClass.addEventListener('change', filterAdminData);
@@ -959,11 +990,21 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
             filterEvent.value = '';
             filterAdminData();
         });
-
         downloadCsvBtn.addEventListener('click', () => {
-            downloadCSV(filteredRegistrations);
+            let filename = "sports_registrations_filtered.csv";
+            if (filterCategory.value) {
+                filename = `sports_registrations_${filterCategory.value}.csv`;
+            }
+            downloadCSV(filteredRegistrations, filename);
         });
-
+        downloadFinalistsCsvBtn.addEventListener('click', () => {
+            const finalists = filteredRegistrations.filter(reg => reg.isFinalist);
+            let filename = "sports_registrations_finalists.csv";
+            if (filterCategory.value) {
+                filename = `sports_registrations_finalists_${filterCategory.value}.csv`;
+            }
+            downloadCSV(finalists, filename);
+        });
         savePdfBtn.addEventListener('click', () => {
             window.print();
         });
@@ -974,7 +1015,6 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
 
     window.onload = function() {
         initializeListeners();
-        const submitBtn = sportsForm.querySelector('button[type="submit"]');
         let userId;
 
         if (isDatabaseReady) {
@@ -988,6 +1028,15 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
                             isFinalist: doc.data().isFinalist || false,
                             ...doc.data()
                         }));
+                        // Check if the current user has already registered
+                        const userRegistrations = allRegistrations.filter(reg => reg.registeredBy === userId);
+                        if (userRegistrations.length > 0 && !isAdmin) {
+                            userRegistrationKey = userRegistrations[0].id;
+                            submitBtn.disabled = true;
+                            toggleView('form');
+                            sportsForm.classList.add('hidden');
+                            submissionCompleteMessage.classList.remove('hidden');
+                        }
                         populateFilters(allRegistrations);
                         filterAdminData();
                     }, (error) => {
@@ -995,30 +1044,53 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
                         adminTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">Error loading data. Check console.</td></tr>';
                     });
                 } else {
-                    // If not authenticated (should sign in anonymously)
-                    try {
-                        await signInAnonymously(auth);
-                    } catch (e) {
-                        console.warn('Anonymous sign-in failed', e);
+                    let attempt = 0;
+                    const maxAttempts = 2;
+                    while (attempt < maxAttempts) {
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                            console.log("Authenticated successfully.");
+                            break;
+                        } catch (error) {
+                            attempt++;
+                            console.error(`Authentication attempt ${attempt} failed:`, error.message, error.code);
+                            showMessageBox(`Authentication attempt ${attempt} failed: ${error.message}. Retrying...`, 'error');
+                            if (attempt === maxAttempts) {
+                                showMessageBox(`Authentication failed after ${maxAttempts} attempts: ${error.message}. Check Firebase configuration or enable anonymous sign-in.`, 'error');
+                                submitBtn.disabled = true;
+                                adminBtn.disabled = true;
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
                     }
                 }
+            }, (error) => {
+                console.error("Auth state change error:", error);
+                showMessageBox(`Auth state error: ${error.message}. Check Firebase setup.`, 'error');
+                submitBtn.disabled = true;
+                adminBtn.disabled = true;
             });
         } else {
-            // If DB not ready, keep submit disabled and show message on admin operations
-            console.warn('Database not ready. Some features will be disabled.');
-        }
-
-        // disable submit if DB not ready
-        if (!isDatabaseReady) {
+            console.error("Firebase is not configured or failed to initialize. Database operations are disabled.");
+            showMessageBox('App Offline: Database configuration is missing or invalid. Submissions are disabled.', 'error');
             submitBtn.disabled = true;
+            adminBtn.disabled = true;
         }
 
-        // Ensure button text / color match initial state
-        adminBtn.textContent = 'Admin Panel';
-        adminBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-        adminBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+        // Check if registration is already completed for this device (only for non-admins)
+        if (localStorage.getItem('registrationCompleted') && !isAdmin) {
+            submitBtn.disabled = true;
+            toggleView('form');
+            sportsForm.classList.add('hidden');
+            submissionCompleteMessage.classList.remove('hidden');
+        }
+
+        toggleView('form');
     };
 </script>
-
 </body>
 </html>
