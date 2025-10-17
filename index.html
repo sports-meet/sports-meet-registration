@@ -846,6 +846,24 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
             showMessageBox('Login failed. Incorrect password.', 'error');
         }
     }
+    // ← ADD EVENT LISTENERS HERE
+adminBtn.addEventListener('click', () => {
+    const isCurrentlyAdmin = !adminPanel.classList.contains('hidden');
+    if (isCurrentlyAdmin) toggleView('form');
+    else openAdminLoginModal();
+});
+
+loginCancelBtn.addEventListener('click', closeAdminLoginModal);
+loginSubmitBtn.addEventListener('click', handleAdminLogin);
+
+adminPasswordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAdminLogin();
+    }
+});
+
+backToFormBtn.addEventListener('click', () => toggleView('form'));
 
     function initializeListeners() {
         dobInput.addEventListener('change', () => {
@@ -1022,6 +1040,7 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
 </script>
 </body>
 </html>
+
 
 
 
