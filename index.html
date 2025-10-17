@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sunrise Sports Meet Registration</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 body {
     background-color: #f8f9fa;
@@ -785,36 +786,39 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             showMessageBox('No data to download. Please ensure your filters return results.', 'error');
             return;
         }
-        const headers = ["ID", "Name", "GR No", "Class", "Division", "House", "DOB", "Category", "Events", "Finalist Status", "Registered By", "Timestamp"];
-        let csv = headers.join(',') + '\n';
-        data.forEach(reg => {
-            const row = [
-                reg.id,
-                reg.name,
-                reg.grNo,
-                reg.class,
-                reg.division,
-                reg.house,
-                reg.dob,
-                reg.category,
-                `"${reg.events.join('; ')}"`,
-                reg.isFinalist ? 'Yes' : 'No',
-                reg.registeredBy,
-                new Date(reg.timestamp).toLocaleString()
-            ];
-            csv += row.map(item => typeof item === 'string' ? `"${item.replace(/"/g, '""')}"` : item).join(',') + '\n';
-        });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", "sports_registrations_filtered.csv");
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showMessageBox(`Downloaded ${data.length} records to CSV.`, 'success');
-    }
+       // Define headers
+const headers = ["ID", "Name", "GR No", "Class", "Division", "House", "DOB", "Category", "Events", "Finalist Status", "Registered By", "Timestamp"];
+
+// Prepare data rows
+const rows = data.map(reg => [
+    reg.id,
+    reg.name,
+    reg.grNo,
+    reg.class,
+    reg.division,
+    reg.house,
+    reg.dob,
+    reg.category,
+    reg.events.join('; '),
+    reg.isFinalist ? 'Yes' : 'No',
+    reg.registeredBy,
+    new Date(reg.timestamp).toLocaleString()
+]);
+
+// Combine headers + data
+const worksheetData = [headers, ...rows];
+
+// Create worksheet and workbook
+const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, "Registrations");
+
+// Export to XLSX file
+XLSX.writeFile(wb, "sports_registrations_filtered.xlsx");
+
+// Optional success message
+showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
+
 
     function openAdminLoginModal() {
         adminPasswordInput.value = '';
@@ -1012,6 +1016,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 </script>
 </body>
 </html>
+
 
 
 
