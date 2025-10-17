@@ -724,15 +724,20 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             <div class="mt-8">
         `;
         const studentDetailsHtml = `
-            <div class="print-info-section space-y-4">
-                ${line('Full Name of the student', data.name)}
-                ${line('Class', data.class)}
-                ${line('Division', data.division)}
-                ${line('Date of Birth (As per school record)', data.dob)}
-                ${line('GR NO', data.grNo)}
-                ${line('Sports House', data.house)}
-                ${line('CATEGORY', data.category)}
-            </div>
+            <div class="print-info-section">
+  <div class="form-line">
+    <span class="field">Full Name of Student: <span class="underline">${data.name || ' '}</span></span>
+    <span class="field">Class: <span class="underline">${data.class || ' '}</span></span>
+    <span class="field">Division: <span class="underline">${data.division || ' '}</span></span>
+  </div>
+
+  <div class="form-line">
+    <span class="field">D.O.B: <span class="underline">${data.dob || ' '}</span></span>
+    <span class="field">G.R. No: <span class="underline">${data.grNo || ' '}</span></span>
+    <span class="field">Sports House: <span class="underline">${data.house || ' '}</span></span>
+    <span class="field">Category: <span class="underline">${data.category || ' '}</span></span>
+  </div>
+</div>
         `;
         const noteHtml = `
             <div class="mt-8 border-t border-gray-300 pt-4">
@@ -1007,5 +1012,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 </script>
 </body>
 </html>
+
 
 
