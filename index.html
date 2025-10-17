@@ -770,16 +770,17 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             <div class="mt-8">
         `;
         const studentDetailsHtml = `
-            <div class="print-info-section space-y-4">
-    ${line('Full Name of the student', data.name)}
-    ${line('Class', data.class)}
-    ${line('Division', data.division)}
-    ${line('Date of Birth (As per school record)', data.dob)}
-    ${line('GR NO', data.grNo)}
-    ${line('Sports House', data.house)}
-    ${line('CATEGORY', data.category)}
+            <div class="print-info-section" style="font-size: 1rem; line-height: 1.5;">
+    FULL NAME OF STUDENT: <span style="text-decoration: underline;">${data.name}</span> &nbsp;&nbsp;&nbsp;
+    CLASS: <span style="text-decoration: underline;">${data.class}</span> &nbsp;&nbsp;&nbsp;
+    DIVISION: <span style="text-decoration: underline;">${data.division}</span> &nbsp;&nbsp;&nbsp;
+    D.O.B: <span style="text-decoration: underline;">${data.dob}</span> &nbsp;&nbsp;&nbsp;
+    GR NO: <span style="text-decoration: underline;">${data.grNo}</span> &nbsp;&nbsp;&nbsp;
+    SPORTS HOUSE: <span style="text-decoration: underline;">${data.house}</span> &nbsp;&nbsp;&nbsp;
+    CATEGORY: <span style="text-decoration: underline;">${data.category}</span>
 </div>
 `;
+
         const noteHtml = `
             <div class="mt-8 border-t border-gray-300 pt-4">
                 <p class="font-bold text-lg mb-2 text-gray-900">Please Note:</p>
