@@ -120,7 +120,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         
         <div id="submissionCompleteMessage" class="hidden text-center p-8 border-4 border-dashed border-green-300 rounded-2xl bg-green-50 shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-20 w-20 text-green-500 mb-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
             </svg>
             <h3 class="text-3xl font-extrabold text-green-700 mb-2">Registration Complete!</h3>
             <p class="text-lg text-gray-700 mb-4">Your registration has been successfully submitted and saved. A student may only register once.</p>
@@ -268,7 +268,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     </div>
 </div>
 
-<button id="adminBtn" class="fixed bottom-6 right-6 bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-full shadow-xl text-sm font-semibold transform hover:scale-105 z-50">
+<button id="adminBtn" class="fixed bottom-6 right-6 bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-full shadow-xl text-sm font-semibold transform hover:scale-105 z-50" aria-label="Open admin panel">
     Admin Panel
 </button>
 
@@ -553,7 +553,9 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         });
         const populateSelect = (selectEl, values) => {
             const currentSelected = selectEl.value;
-            selectEl.innerHTML = selectEl.querySelector('option[value=""]') ? '<option value="">' + selectEl.querySelector('option[value=""]').textContent + '</option>' : '<option value="">All</option>';
+            // Preserve the default option's text if present
+            const defaultOptionText = selectEl.querySelector('option[value=""]') ? selectEl.querySelector('option[value=""]').textContent : 'All';
+            selectEl.innerHTML = `<option value="">${defaultOptionText}</option>`;
             const sortedValues = Array.from(values).sort((a, b) => (selectEl.id === 'filterClass' ? parseInt(a) - parseInt(b) : a.localeCompare(b)));
             sortedValues.forEach(value => {
                 if (value) {
@@ -604,7 +606,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 <td>${reg.category}</td>
                 <td>${reg.events.join(', ')}</td>
                 <td class="text-center">
-                    <button data-id="${reg.id}" data-status="${isFinalist}" class="finalist-toggle-btn text-sm font-medium transition duration-150 rounded-full px-3 py-1 ${isFinalist ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}">
+                    <button data-id="${reg.id}" data-status="${isFinalist}" class="finalist-toggle-btn text-sm font-medium transition duration-150 rounded-full px-3 py-1 ${isFinalist ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}">
                         ${isFinalist ? 'Finalist' : 'Select'}
                     </button>
                 </td>
@@ -658,21 +660,26 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     }
 
     function toggleView(view) {
+        // Hide everything first
         mainContainer.classList.add('hidden');
         adminPanel.classList.add('hidden');
         printArea.classList.add('hidden');
+
+        // Make sure admin button is visible by default unless summary view
         adminBtn.classList.remove('hidden');
+
         if (view === 'admin') {
             adminPanel.classList.remove('hidden');
             adminBtn.textContent = 'Back to Registration';
-            adminBtn.classList.replace('bg-red-500', 'bg-blue-500');
-            adminBtn.classList.replace('hover:bg-red-600', 'hover:bg-blue-600');
+            // Use remove/add instead of replace to avoid silent failure if class not present
+            adminBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            adminBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
             filterAdminData();
         } else if (view === 'form') {
             mainContainer.classList.remove('hidden');
             adminBtn.textContent = 'Admin Panel';
-            adminBtn.classList.replace('bg-blue-500', 'bg-red-500');
-            adminBtn.classList.replace('hover:bg-blue-600', 'hover:bg-red-600');
+            adminBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            adminBtn.classList.add('bg-red-500', 'hover:bg-red-600');
             const isEditing = sportsForm.querySelector('button[type="submit"]').dataset.editingId;
             if (lastSubmittedData && !isEditing) {
                 sportsForm.classList.add('hidden');
@@ -802,7 +809,7 @@ const rows = data.map(reg => [
     reg.events.join('; '),
     reg.isFinalist ? 'Yes' : 'No',
     reg.registeredBy,
-    new Date(reg.timestamp).toLocaleString()
+    reg.timestamp ? new Date(reg.timestamp).toLocaleString() : ''
 ]);
 
 // Combine headers + data
@@ -818,7 +825,7 @@ XLSX.writeFile(wb, "sports_registrations_filtered.xlsx");
 
 // Optional success message
 showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
-
+    }
 
     function openAdminLoginModal() {
         adminPasswordInput.value = '';
@@ -846,31 +853,37 @@ showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
             showMessageBox('Login failed. Incorrect password.', 'error');
         }
     }
-    // ← ADD EVENT LISTENERS HERE
-adminBtn.addEventListener('click', () => {
-    const isCurrentlyAdmin = !adminPanel.classList.contains('hidden');
-    if (isCurrentlyAdmin) toggleView('form');
-    else openAdminLoginModal();
-});
-
-loginCancelBtn.addEventListener('click', closeAdminLoginModal);
-loginSubmitBtn.addEventListener('click', handleAdminLogin);
-
-adminPasswordInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        handleAdminLogin();
-    }
-});
-
-backToFormBtn.addEventListener('click', () => toggleView('form'));
 
     function initializeListeners() {
+        // Admin button: open login modal OR go back to form when admin panel visible
+        adminBtn.addEventListener('click', () => {
+            const isCurrentlyAdmin = !adminPanel.classList.contains('hidden');
+            if (isCurrentlyAdmin) toggleView('form');
+            else openAdminLoginModal();
+        });
+
+        // Admin login modal controls
+        loginCancelBtn.addEventListener('click', closeAdminLoginModal);
+        loginSubmitBtn.addEventListener('click', handleAdminLogin);
+
+        adminPasswordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAdminLogin();
+            }
+        });
+
+        // Back button in admin panel
+        backToFormBtn.addEventListener('click', () => toggleView('form'));
+
+        // DOB changes -> re-calc category & events
         dobInput.addEventListener('change', () => {
             const category = calculateCategory(dobInput.value);
             categoryInput.value = category;
             renderEvents(category);
         });
+
+        // Form submit
         sportsForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const submitBtn = sportsForm.querySelector('button[type="submit"]');
@@ -933,26 +946,8 @@ backToFormBtn.addEventListener('click', () => toggleView('form'));
                 );
             }
         });
-        document.addEventListener('DOMContentLoaded', () => {
-    adminBtn.addEventListener('click', () => {
-        const isCurrentlyAdmin = !adminPanel.classList.contains('hidden');
-        if (isCurrentlyAdmin) toggleView('form');
-        else openAdminLoginModal();
-    });
 
-    loginCancelBtn.addEventListener('click', closeAdminLoginModal);
-
-    loginSubmitBtn.addEventListener('click', handleAdminLogin);
-
-    adminPasswordInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleAdminLogin();
-        }
-    });
-});
-
-        backToFormBtn.addEventListener('click', () => toggleView('form'));
+        // Admin filters & search
         adminSearch.addEventListener('input', filterAdminData);
         filterCategory.addEventListener('change', filterAdminData);
         filterClass.addEventListener('change', filterAdminData);
@@ -964,9 +959,11 @@ backToFormBtn.addEventListener('click', () => toggleView('form'));
             filterEvent.value = '';
             filterAdminData();
         });
+
         downloadCsvBtn.addEventListener('click', () => {
             downloadCSV(filteredRegistrations);
         });
+
         savePdfBtn.addEventListener('click', () => {
             window.print();
         });
@@ -998,51 +995,30 @@ backToFormBtn.addEventListener('click', () => toggleView('form'));
                         adminTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">Error loading data. Check console.</td></tr>';
                     });
                 } else {
-                    let attempt = 0;
-                    const maxAttempts = 2;
-                    while (attempt < maxAttempts) {
-                        try {
-                            if (initialAuthToken) {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                            console.log("Authenticated successfully.");
-                            break;
-                        } catch (error) {
-                            attempt++;
-                            console.error(`Authentication attempt ${attempt} failed:`, error.message, error.code);
-                            showMessageBox(`Authentication attempt ${attempt} failed: ${error.message}. Retrying...`, 'error');
-                            if (attempt === maxAttempts) {
-                                showMessageBox(`Authentication failed after ${maxAttempts} attempts: ${error.message}. Check Firebase configuration or enable anonymous sign-in.`, 'error');
-                                submitBtn.disabled = true;
-                                adminBtn.disabled = true;
-                            }
-                            await new Promise(resolve => setTimeout(resolve, 1000));
-                        }
+                    // If not authenticated (should sign in anonymously)
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (e) {
+                        console.warn('Anonymous sign-in failed', e);
                     }
                 }
-            }, (error) => {
-                console.error("Auth state change error:", error);
-                showMessageBox(`Auth state error: ${error.message}. Check Firebase setup.`, 'error');
-                submitBtn.disabled = true;
-                adminBtn.disabled = true;
             });
         } else {
-            console.error("Firebase is not configured or failed to initialize. Database operations are disabled.");
-            showMessageBox('App Offline: Database configuration is missing or invalid. Submissions are disabled.', 'error');
-            submitBtn.disabled = true;
-            adminBtn.disabled = true;
+            // If DB not ready, keep submit disabled and show message on admin operations
+            console.warn('Database not ready. Some features will be disabled.');
         }
 
-        toggleView('form');
+        // disable submit if DB not ready
+        if (!isDatabaseReady) {
+            submitBtn.disabled = true;
+        }
+
+        // Ensure button text / color match initial state
+        adminBtn.textContent = 'Admin Panel';
+        adminBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+        adminBtn.classList.add('bg-red-500', 'hover:bg-red-600');
     };
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
