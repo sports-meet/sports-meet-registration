@@ -27,12 +27,10 @@
                 }
 
                 // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
+                var worksheet = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+var workbook = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+XLSX.writeFile(workbook, "sports_registrations_filtered.xlsx");
             }
         }
         return gk_fileData[filename] || "";
