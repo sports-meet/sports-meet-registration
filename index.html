@@ -1,41 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var worksheet = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-var workbook = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-XLSX.writeFile(workbook, "sports_registrations_filtered.xlsx");
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -278,8 +241,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-2 border-t border-gray-100">
             <p id="totalRegistrations" class="text-lg font-bold text-gray-700 p-3 bg-gray-100 rounded-xl whitespace-nowrap"></p>
             <div class="flex space-x-3 w-full sm:w-auto">
-                <button id="downloadCsvBtn" class="app-button app-button-green text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download All CSV</button>
-                <button id="downloadFinalistsCsvBtn" class="app-button app-button-blue text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Finalists CSV</button>
+                <button id="downloadCsvBtn" class="app-button app-button-green text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download All XLSX</button>
+                <button id="downloadFinalistsCsvBtn" class="app-button app-button-blue text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Finalists XLSX</button>
                 <button id="clearFiltersBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Clear Filters</button>
             </div>
         </div>
@@ -309,6 +272,47 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 <button id="adminBtn" class="fixed bottom-6 right-6 bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-full shadow-xl text-sm font-semibold transform hover:scale-105 z-50">
     Admin Panel
 </button>
+
+<script type="text/javascript">
+    var gk_isXlsx = true;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+        return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                    row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                    headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to XLSX
+                var worksheet = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                var workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+                XLSX.writeFile(workbook, filename);
+            } catch (e) {
+                console.error("Error processing file:", e);
+            }
+        }
+        return gk_fileData[filename] || "";
+    }
+</script>
 
 <script type="module">
     // Firebase Imports
@@ -817,20 +821,19 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 </div>
             </div>
         `;
-        const fullContent = introHtml + studentDetailsHtml + '</div>' + noteHtml + eventsHtml + signatureHtml;
         summaryTitle.textContent = '';
         summaryDetails.innerHTML = headerHtml + fullContent;
     }
 
-    function downloadCSV(data, filename = "sports_registrations_filtered.csv") {
+    function downloadXLSX(data, filename = "sports_registrations_filtered.xlsx") {
         if (data.length === 0) {
             showMessageBox('No data to download. Please ensure your filters return results.', 'error');
             return;
         }
         const headers = ["ID", "Name", "GR No", "Class", "Division", "House", "DOB", "Category", "Events", "Finalist Status", "Registered By", "Timestamp"];
-        let csv = headers.join(',') + '\n';
-        data.forEach(reg => {
-            const row = [
+        const worksheetData = [
+            headers,
+            ...data.map(reg => [
                 reg.id,
                 reg.name,
                 reg.grNo,
@@ -839,23 +842,17 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 reg.house,
                 reg.dob,
                 reg.category,
-                `"${reg.events.join('; ')}"`,
+                reg.events.join('; '),
                 reg.isFinalist ? 'Yes' : 'No',
                 reg.registeredBy,
                 new Date(reg.timestamp).toLocaleString()
-            ];
-            csv += row.map(item => typeof item === 'string' ? `"${item.replace(/"/g, '""')}"` : item).join(',') + '\n';
-        });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showMessageBox(`Downloaded ${data.length} records to CSV.`, 'success');
+            ])
+        ];
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
+        XLSX.writeFile(workbook, filename);
+        showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
     }
 
     function openAdminLoginModal() {
