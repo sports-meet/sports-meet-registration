@@ -110,7 +110,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 </div>
 
 <div id="resultsModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay">
-    <div class="bg-white rounded-3xl p-8 w-11/12 max-w-2xl shadow-2xl border border-gray-200">
+    <div class="bg-white rounded-3xl p-8 w-11/12 max-w-xl shadow-2xl border border-gray-200">
         <h3 class="text-2xl font-extrabold text-gray-900 mb-4 border-b border-blue-500 pb-2">Manage Event Results</h3>
         <div class="space-y-4">
             <select id="resultClass" class="app-input" required>
@@ -146,11 +146,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             <select id="resultEvent" class="app-input" required>
                 <option value="" disabled selected>Select Event</option>
             </select>
-            <div id="finalistsList" class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 font-medium hidden">
-                <p class="font-semibold mb-2">Finalists for this event:</p>
-                <div id="finalistsContainer" class="space-y-3"></div>
-            </div>
-            <textarea id="resultDetails" class="app-input h-48" placeholder="Enter additional results details (e.g., 1st: John Doe (12.5s), 2nd: Jane Smith (12.8s), etc.)"></textarea>
+            <div id="finalistsList" class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 font-medium hidden"></div>
+            <textarea id="resultDetails" class="app-input h-48" placeholder="Enter results (e.g., 1st: Name (Time), 2nd: ...). You can include times or any details."></textarea>
         </div>
         <div class="flex justify-end space-x-3 mt-6">
             <button id="resultCancelBtn" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition shadow-md">Cancel</button>
@@ -492,7 +489,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const resultGender = document.getElementById('resultGender');
     const resultEvent = document.getElementById('resultEvent');
     const finalistsList = document.getElementById('finalistsList');
-    const finalistsContainer = document.getElementById('finalistsContainer');
     const resultDetails = document.getElementById('resultDetails');
     const resultCancelBtn = document.getElementById('resultCancelBtn');
     const resultSaveBtn = document.getElementById('resultSaveBtn');
@@ -978,7 +974,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             showMessageBox('No results to download.', 'error');
             return;
         }
-        const headers = ["Class", "Division", "Gender", "Event", "Finalists", "Results", "Timestamp"];
+        const headers = ["Class", "Division", "Gender", "Event", "Results", "Timestamp"];
         const worksheetData = [
             headers,
             ...allResults.map(res => [
@@ -986,7 +982,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 res.division,
                 res.gender,
                 res.event,
-                res.finalists.join(', '),
                 res.details,
                 new Date(res.timestamp).toLocaleString()
             ])
@@ -1039,7 +1034,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             resultEvent.appendChild(option);
         });
         finalistsList.classList.add('hidden');
-        finalistsContainer.innerHTML = '';
+        finalistsList.innerHTML = '';
         resultDetails.value = '';
         resultsModal.classList.remove('hidden');
         resultsModal.classList.add('flex');
@@ -1056,7 +1051,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         const gender = resultGender.value;
         const eventVal = resultEvent.value;
         finalistsList.classList.add('hidden');
-        finalistsContainer.innerHTML = '';
+        finalistsList.innerHTML = '';
         if (!classVal || !division || !gender || !eventVal) return;
         const finalists = allRegistrations.filter(reg => 
             reg.class === classVal &&
@@ -1064,57 +1059,10 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             reg.gender === gender &&
             reg.events.includes(eventVal) &&
             reg.isFinalist
-        );
+        ).map(reg => reg.name);
         if (finalists.length > 0) {
-            finalistsContainer.innerHTML = finalists.map(f => `
-                <div class="flex items-center space-x-2">
-                    <span class="font-semibold">${f.name}</span>
-                    <input type="text" data-id="${f.id}" class="app-input flex-grow text-sm" placeholder="Enter details (e.g., time, place)" value="${f.resultDetails?.[eventVal] || ''}">
-                </div>
-            `).join('');
+            finalistsList.innerHTML = `<p>Finalists for this event:</p><ul class="list-disc ml-6">${finalists.map(name => `<li>${name}</li>`).join('')}</ul>`;
             finalistsList.classList.remove('hidden');
-            finalistsContainer.querySelectorAll('input').forEach(input => {
-                input.addEventListener('input', (e) => {
-                    const docId = e.target.dataset.id;
-                    const value = e.target.value;
-                    // Store temporarily in the registration object
-                    const reg = allRegistrations.find(r => r.id === docId);
-                    if (reg) {
-                        reg.resultDetails = reg.resultDetails || {};
-                        reg.resultDetails[eventVal] = value;
-                    }
-                });
-            });
-        }
-    }
-
-    async function saveResults(data) {
-        if (!isDatabaseReady) {
-            showMessageBox('Database is not initialized. Results save failed.', 'error');
-            return;
-        }
-        try {
-            const key = `${data.classVal}-${data.division}-${data.gender}-${data.event}`;
-            // Update finalist details in registrations
-            const finalists = allRegistrations.filter(reg => 
-                reg.class === data.classVal &&
-                reg.division === data.division &&
-                reg.gender === data.gender &&
-                reg.events.includes(data.event) &&
-                reg.isFinalist
-            );
-            for (const finalist of finalists) {
-                const regRef = doc(db, COLLECTION_PATH, finalist.id);
-                await setDoc(regRef, { 
-                    resultDetails: finalist.resultDetails || {}
-                }, { merge: true });
-            }
-            await setDoc(doc(db, RESULTS_COLLECTION_PATH, key), data);
-            showMessageBox('Results saved successfully!', 'success');
-            closeResultsModal();
-        } catch (e) {
-            console.error("Error saving results: ", e);
-            showMessageBox('Failed to save results.', 'error');
         }
     }
 
@@ -1177,7 +1125,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 category,
                 events: selectedEvents,
                 isFinalist: reg.isFinalist || false,
-                resultDetails: reg.resultDetails || {},
                 registeredBy: currentUserId,
                 timestamp: Date.now()
             };
@@ -1249,27 +1196,15 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             const gender = resultGender.value;
             const eventVal = resultEvent.value;
             const details = resultDetails.value.trim();
-            if (!classVal || !division || !gender || !eventVal) {
+            if (!classVal || !division || !gender || !eventVal || !details) {
                 showMessageBox('Please fill all fields.', 'error');
                 return;
             }
-            const finalists = allRegistrations.filter(reg => 
-                reg.class === classVal &&
-                reg.division === division &&
-                reg.gender === gender &&
-                reg.events.includes(eventVal) &&
-                reg.isFinalist
-            ).map(reg => ({
-                name: reg.name,
-                details: reg.resultDetails?.[eventVal] || ''
-            }));
             const data = {
                 classVal,
                 division,
                 gender,
                 event: eventVal,
-                finalists: finalists.map(f => f.name),
-                finalistDetails: finalists.map(f => ({ name: f.name, details: f.details })),
                 details,
                 timestamp: Date.now()
             };
@@ -1302,7 +1237,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                         allRegistrations = snapshot.docs.map(doc => ({
                             id: doc.id,
                             isFinalist: doc.data().isFinalist || false,
-                            resultDetails: doc.data().resultDetails || {},
                             ...doc.data()
                         }));
                         populateFilters(allRegistrations);
@@ -1363,4 +1297,3 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 </script>
 </body>
 </html>
-
