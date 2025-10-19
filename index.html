@@ -110,48 +110,14 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 </div>
 
 <div id="resultsModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay">
-    <div class="bg-white rounded-3xl p-8 w-11/12 max-w-xl shadow-2xl border border-gray-200">
-        <h3 class="text-2xl font-extrabold text-gray-900 mb-4 border-b border-blue-500 pb-2">Manage Event Results</h3>
+    <div class="bg-white rounded-3xl p-8 w-11/12 max-w-4xl shadow-2xl border border-gray-200">
+        <h3 class="text-2xl font-extrabold text-gray-900 mb-4 border-b border-blue-500 pb-2">Manage All Event Results</h3>
         <div class="space-y-4">
-            <select id="resultClass" class="app-input" required>
-                <option value="" disabled selected>Select Class</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
-            </select>
-            <select id="resultDivision" class="app-input" required>
-                <option value="" disabled selected>Select Division</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-                <option value="E">E</option>
-                <option value="F">F</option>
-                <option value="G">G</option>
-                <option value="H">H</option>
-                <option value="I">I</option>
-                <option value="J">J</option>
-            </select>
-            <select id="resultGender" class="app-input" required>
-                <option value="" disabled selected>Select Gender</option>
-                <option value="Boy">Boys</option>
-                <option value="Girl">Girls</option>
-            </select>
-            <select id="resultEvent" class="app-input" required>
-                <option value="" disabled selected>Select Event</option>
-            </select>
-            <div id="finalistsList" class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 font-medium hidden"></div>
-            <textarea id="resultDetails" class="app-input h-48" placeholder="Enter results (e.g., 1st: Name (Time), 2nd: ...). You can include times or any details."></textarea>
+            <div id="finalistsList" class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 font-medium hidden space-y-4 overflow-y-auto max-h-[70vh]"></div>
         </div>
         <div class="flex justify-end space-x-3 mt-6">
             <button id="resultCancelBtn" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition shadow-md">Cancel</button>
-            <button id="resultSaveBtn" class="px-5 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition shadow-md">Save Results</button>
+            <button id="resultSaveBtn" class="px-5 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition shadow-md">Save All Results</button>
         </div>
     </div>
 </div>
@@ -970,28 +936,28 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     }
 
     function downloadResultsXLSX() {
-        if (allResults.length === 0) {
-            showMessageBox('No results to download.', 'error');
-            return;
-        }
-        const headers = ["Class", "Division", "Gender", "Event", "Results", "Timestamp"];
-        const worksheetData = [
-            headers,
-            ...allResults.map(res => [
-                res.classVal,
-                res.division,
-                res.gender,
-                res.event,
-                res.details,
-                new Date(res.timestamp).toLocaleString()
-            ])
-        ];
-        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
-        XLSX.writeFile(workbook, "sports_results.xlsx");
-        showMessageBox(`Downloaded ${allResults.length} result records to XLSX.`, 'success');
+    if (allResults.length === 0) {
+        showMessageBox('No results to download.', 'error');
+        return;
     }
+    const headers = ["Class", "Division", "Gender", "Event", "Results", "Timestamp"];
+    const worksheetData = [
+        headers,
+        ...allResults.map(res => [
+            res.classVal,
+            res.division,
+            res.gender,
+            res.event,
+            res.details,
+            new Date(res.timestamp).toLocaleString()
+        ])
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
+    XLSX.writeFile(workbook, "sports_results.xlsx");
+    showMessageBox(`Downloaded ${allResults.length} result records to XLSX.`, 'success');
+}
 
     function openAdminLoginModal() {
         adminPasswordInput.value = '';
@@ -1021,20 +987,9 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     }
 
     function openResultsModal() {
-    resultClass.value = '';
-    resultDivision.value = '';
-    resultGender.value = '';
-    resultEvent.innerHTML = '<option value="" disabled selected>Select Event</option>';
-    const allEvents = new Set();
-    Object.values(SPORTS_EVENTS).forEach(cat => cat.events.forEach(ev => allEvents.add(ev)));
-    allEvents.forEach(ev => {
-        const option = document.createElement('option');
-        option.value = ev;
-        option.textContent = ev;
-        resultEvent.appendChild(option);
-    });
     finalistsList.classList.add('hidden');
     finalistsList.innerHTML = '';
+    generateAllFinalists();
     resultsModal.classList.remove('hidden');
     resultsModal.classList.add('flex');
 }
@@ -1044,37 +999,44 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         resultsModal.classList.remove('flex');
     }
 
-    function updateFinalistsList() {
-    const classVal = resultClass.value;
-    const division = resultDivision.value;
-    const gender = resultGender.value;
-    const eventVal = resultEvent.value;
-    finalistsList.classList.add('hidden');
-    finalistsList.innerHTML = '';
-    if (!classVal || !division || !gender || !eventVal) return;
-    const finalists = allRegistrations.filter(reg => 
-        reg.class === classVal &&
-        reg.division === division &&
-        reg.gender === gender &&
-        reg.events.includes(eventVal) &&
-        reg.isFinalist
-    ).map(reg => reg.name);
-    if (finalists.length > 0) {
-        finalistsList.innerHTML = `<p class="mb-2">Enter results for finalists (e.g., time, position, or details):</p>`;
-        finalists.forEach((name, index) => {
-            const div = document.createElement('div');
-            div.className = 'flex items-center space-x-4';
-            div.innerHTML = `
-                <span class="w-1/3 font-semibold">${name}</span>
-                <input type="text" id="result-input-${index}" class="app-input w-2/3" placeholder="Enter time/result">
-            `;
-            finalistsList.appendChild(div);
+    function generateAllFinalists() {
+    const genders = ['Boy', 'Girl'];
+    const classes = ['4', '5', '6', '7', '8', '9', '10', '11', '12'];
+    const divisions = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+    let content = '';
+    genders.forEach(gender => {
+        content += `<h4 class="text-xl font-bold mt-6">${gender}s</h4>`;
+        classes.forEach(classVal => {
+            content += `<h5 class="text-lg font-bold mt-4">Class ${classVal}</h5>`;
+            divisions.forEach(division => {
+                const students = allRegistrations.filter(reg => 
+                    reg.class === classVal &&
+                    reg.division === division &&
+                    reg.gender === gender &&
+                    reg.isFinalist
+                );
+                if (students.length === 0) return;
+                content += `<h6 class="text-md font-semibold mt-3">Division ${division}</h6>`;
+                const eventsSet = new Set();
+                students.forEach(stu => stu.events.forEach(ev => eventsSet.add(ev)));
+                const events = Array.from(eventsSet).sort();
+                events.forEach(eventVal => {
+                    content += `<p class="font-medium mt-2">${eventVal}</p>`;
+                    const finalists = students.filter(stu => stu.events.includes(eventVal)).map(stu => stu.name);
+                    finalists.forEach((name, index) => {
+                        content += `
+                            <div class="flex items-center space-x-4 mt-1">
+                                <span class="w-1/3">${name}</span>
+                                <input type="text" data-group="${classVal}-${division}-${gender}-${eventVal}" data-index="${index}" class="app-input w-2/3 result-input" placeholder="Enter time/result">
+                            </div>
+                        `;
+                    });
+                });
+            });
         });
-        finalistsList.classList.remove('hidden');
-    } else {
-        finalistsList.innerHTML = '<p>No finalists for this event.</p>';
-        finalistsList.classList.remove('hidden');
-    }
+    });
+    finalistsList.innerHTML = content;
+    finalistsList.classList.remove('hidden');
 }
 
     function initializeListeners() {
@@ -1201,57 +1163,63 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         });
         manageResultsBtn.addEventListener('click', openResultsModal);
         resultCancelBtn.addEventListener('click', closeResultsModal);
-        resultSaveBtn.addEventListener('click', () => {
-    const classVal = resultClass.value;
-    const division = resultDivision.value;
-    const gender = resultGender.value;
-    const eventVal = resultEvent.value;
-    if (!classVal || !division || !gender || !eventVal) {
-        showMessageBox('Please fill all fields.', 'error');
-        return;
-    }
-    const inputs = finalistsList.querySelectorAll('input[type="text"]');
-    const finalists = allRegistrations.filter(reg => 
-        reg.class === classVal &&
-        reg.division === division &&
-        reg.gender === gender &&
-        reg.events.includes(eventVal) &&
-        reg.isFinalist
-    ).map(reg => reg.name);
-    let details = '';
-    let hasDetails = false;
-    inputs.forEach((input, index) => {
-        const value = input.value.trim();
-        if (value) {
-            hasDetails = true;
-            details += `${finalists[index]}: ${value}\n`;
+        resultSaveBtn.addEventListener('click', async () => {
+    const inputs = finalistsList.querySelectorAll('.result-input');
+    const groups = {};
+    inputs.forEach(input => {
+        if (input.value.trim()) {
+            const group = input.dataset.group;
+            const index = input.dataset.index;
+            if (!groups[group]) groups[group] = [];
+            groups[group].push({ index: parseInt(index), value: input.value.trim() });
         }
     });
-    if (!hasDetails) {
+    if (Object.keys(groups).length === 0) {
         showMessageBox('Please enter at least one result.', 'error');
         return;
     }
-    const data = {
-        classVal,
-        division,
-        gender,
-        event: eventVal,
-        details,
-        timestamp: Date.now()
-    };
     showConfirmationModal(
         'Confirm Save',
-        `Save results for Class ${classVal}-${division}, Gender: ${gender}, Event: ${eventVal}?`,
-        () => saveResults(data),
+        'Are you sure you want to save all entered results?',
+        async () => {
+            try {
+                await Promise.all(Object.keys(groups).map(async (group) => {
+                    const [classVal, division, gender, eventVal] = group.split('-');
+                    const students = allRegistrations.filter(reg => 
+                        reg.class === classVal &&
+                        reg.division === division &&
+                        reg.gender === gender &&
+                        reg.isFinalist
+                    );
+                    const finalists = students.filter(stu => stu.events.includes(eventVal)).map(stu => stu.name);
+                    let details = '';
+                    groups[group].sort((a, b) => a.index - b.index).forEach(entry => {
+                        const name = finalists[entry.index];
+                        details += `${name}: ${entry.value}\n`;
+                    });
+                    const data = {
+                        classVal,
+                        division,
+                        gender,
+                        event: eventVal,
+                        details,
+                        timestamp: Date.now()
+                    };
+                    const key = group;
+                    await setDoc(doc(db, RESULTS_COLLECTION_PATH, key), data);
+                }));
+                showMessageBox('All results saved successfully!', 'success');
+                closeResultsModal();
+            } catch (e) {
+                console.error("Error saving results: ", e);
+                showMessageBox('Failed to save some results.', 'error');
+            }
+        },
         'Save',
         'bg-green-600'
     );
 });
         downloadResultsBtn.addEventListener('click', downloadResultsXLSX);
-        resultClass.addEventListener('change', updateFinalistsList);
-        resultDivision.addEventListener('change', updateFinalistsList);
-        resultGender.addEventListener('change', updateFinalistsList);
-        resultEvent.addEventListener('change', updateFinalistsList);
     }
 
     window.onload = function() {
