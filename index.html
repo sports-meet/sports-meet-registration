@@ -109,6 +109,56 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     </div>
 </div>
 
+<div id="resultsModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay">
+    <div class="bg-white rounded-3xl p-8 w-11/12 max-w-2xl shadow-2xl border border-gray-200">
+        <h3 class="text-2xl font-extrabold text-gray-900 mb-4 border-b border-blue-500 pb-2">Manage Event Results</h3>
+        <div class="space-y-4">
+            <select id="resultClass" class="app-input" required>
+                <option value="" disabled selected>Select Class</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+            </select>
+            <select id="resultDivision" class="app-input" required>
+                <option value="" disabled selected>Select Division</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+                <option value="G">G</option>
+                <option value="H">H</option>
+                <option value="I">I</option>
+                <option value="J">J</option>
+            </select>
+            <select id="resultGender" class="app-input" required>
+                <option value="" disabled selected>Select Gender</option>
+                <option value="Boy">Boys</option>
+                <option value="Girl">Girls</option>
+            </select>
+            <select id="resultEvent" class="app-input" required>
+                <option value="" disabled selected>Select Event</option>
+            </select>
+            <div id="finalistsList" class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 font-medium hidden">
+                <p class="font-semibold mb-2">Finalists for this event:</p>
+                <div id="finalistsContainer" class="space-y-3"></div>
+            </div>
+            <textarea id="resultDetails" class="app-input h-48" placeholder="Enter additional results details (e.g., 1st: John Doe (12.5s), 2nd: Jane Smith (12.8s), etc.)"></textarea>
+        </div>
+        <div class="flex justify-end space-x-3 mt-6">
+            <button id="resultCancelBtn" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition shadow-md">Cancel</button>
+            <button id="resultSaveBtn" class="px-5 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition shadow-md">Save Results</button>
+        </div>
+    </div>
+</div>
+
 <div id="messageBox" class="fixed top-5 left-1/2 transform -translate-x-1/2 p-4 rounded-xl shadow-lg text-white font-semibold z-50 transition-all duration-300 hidden"></div>
 
 <div id="mainContainer" class="w-full max-w-6xl mx-auto flex items-start justify-center p-4 md:h-screen md:p-8">
@@ -170,6 +220,14 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                     </select>
                 </div>
                 <div>
+                    <label for="gender" class="block text-sm font-semibold text-gray-700">Gender</label>
+                    <select id="gender" class="app-input" required>
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="Boy">Boy</option>
+                        <option value="Girl">Girl</option>
+                    </select>
+                </div>
+                <div>
                     <label for="house" class="block text-sm font-semibold text-gray-700">Sports House</label>
                     <select id="house" class="app-input appearance-none bg-gray-50" required>
                         <option value="" disabled selected>Select House</option>
@@ -181,7 +239,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 </div>
                 <div>
                     <label for="dob" class="block text-sm font-semibold text-gray-700">Date of Birth</label>
-                    <input type="date" id="dob" class="app-input" required>
+                    <input type="date" id="dob" min="2005-01-01" max="2018-12-31" class="app-input" required>
                 </div>
                 <div>
                     <label for="category" class="block text-sm font-semibold text-gray-700">Calculated Category</label>
@@ -225,16 +283,22 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     </header>
 
     <div class="space-y-4 mb-6">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <input type="text" id="adminSearch" placeholder="Search Name/GR No..." class="app-input text-base col-span-2 md:col-span-1">
-            <select id="filterCategory" class="app-input text-base">
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <input type="text" id="adminSearch" placeholder="Search Name/GR No..." class="app-input text-base col-span-2">
+            <select id="filterCategory" class="app-input text-base col-span-1">
                 <option value="">All Categories</option>
             </select>
-            <select id="filterClass" class="app-input text-base">
+            <select id="filterClass" class="app-input text-base col-span-1">
                 <option value="">All Classes</option>
             </select>
             <select id="filterEvent" class="app-input text-base col-span-2 md:col-span-1">
                 <option value="">All Events</option>
+            </select>
+            <select id="filterDivision" class="app-input text-base col-span-2 md:col-span-1">
+                <option value="">All Divisions</option>
+            </select>
+            <select id="filterGender" class="app-input text-base col-span-2 md:col-span-1">
+                <option value="">All Genders</option>
             </select>
         </div>
 
@@ -243,9 +307,14 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             <div class="flex space-x-3 w-full sm:w-auto">
                 <button id="downloadCsvBtn" class="app-button app-button-green text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download All XLSX</button>
                 <button id="downloadFinalistsCsvBtn" class="app-button app-button-blue text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Finalists XLSX</button>
+                <button id="downloadResultsBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Results XLSX</button>
                 <button id="clearFiltersBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Clear Filters</button>
             </div>
         </div>
+    </div>
+
+    <div class="mb-6">
+        <button id="manageResultsBtn" class="app-button app-button-blue text-base py-2 px-4 shadow-md">Manage Results</button>
     </div>
 
     <div class="overflow-x-auto rounded-xl shadow-inner border border-gray-200">
@@ -255,6 +324,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                     <th>Name</th>
                     <th>GR No</th>
                     <th>Class/Div</th>
+                    <th>Gender</th>
                     <th>House</th>
                     <th>Category</th>
                     <th>Events</th>
@@ -263,7 +333,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 </tr>
             </thead>
             <tbody id="adminTableBody">
-                <tr><td colspan="8" class="text-center py-10 text-gray-500">Loading registrations...</td></tr>
+                <tr><td colspan="9" class="text-center py-10 text-gray-500">Loading registrations...</td></tr>
             </tbody>
         </table>
     </div>
@@ -360,8 +430,11 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     }
 
     const COLLECTION_PATH = `/artifacts/${appId}/public/data/registrations`;
+    const RESULTS_COLLECTION_PATH = `/artifacts/${appId}/public/data/results`;
     const ADMIN_PASSWORD = "SUN2025";
 
+    const MIN_YEAR = 2005;
+    const MAX_YEAR = 2018;
     const CUTOFF_2017 = '2017-01-01';
     const CUTOFF_2015 = '2015-01-01';
     const CUTOFF_2013 = '2013-01-01';
@@ -392,6 +465,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const filterCategory = document.getElementById('filterCategory');
     const filterClass = document.getElementById('filterClass');
     const filterEvent = document.getElementById('filterEvent');
+    const filterDivision = document.getElementById('filterDivision');
+    const filterGender = document.getElementById('filterGender');
     const downloadCsvBtn = document.getElementById('downloadCsvBtn');
     const downloadFinalistsCsvBtn = document.getElementById('downloadFinalistsCsvBtn');
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
@@ -411,9 +486,22 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const summaryDetails = document.getElementById('summaryDetails');
     const savePdfBtn = document.getElementById('savePdfBtn');
     const doneBtn = document.getElementById('doneBtn');
+    const resultsModal = document.getElementById('resultsModal');
+    const resultClass = document.getElementById('resultClass');
+    const resultDivision = document.getElementById('resultDivision');
+    const resultGender = document.getElementById('resultGender');
+    const resultEvent = document.getElementById('resultEvent');
+    const finalistsList = document.getElementById('finalistsList');
+    const finalistsContainer = document.getElementById('finalistsContainer');
+    const resultDetails = document.getElementById('resultDetails');
+    const resultCancelBtn = document.getElementById('resultCancelBtn');
+    const resultSaveBtn = document.getElementById('resultSaveBtn');
+    const manageResultsBtn = document.getElementById('manageResultsBtn');
+    const downloadResultsBtn = document.getElementById('downloadResultsBtn');
 
     let allRegistrations = [];
     let filteredRegistrations = [];
+    let allResults = [];
     let lastSubmittedData = null;
 
     function showMessageBox(message, type) {
@@ -461,8 +549,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         if (!dobString) return '';
         const dobYear = parseInt(dobString.split('-')[0]);
         const currentYear = 2025; // Current year as per the date
-        if (dobYear < 1900 || dobYear > currentYear) {
-            return 'invalid';
+        if (dobYear < MIN_YEAR || dobYear > MAX_YEAR) {
+            return 'ineligible';
         }
         if (dobString >= CUTOFF_2017) return "Sub Junior";
         else if (dobString >= CUTOFF_2015 && dobString < CUTOFF_2017) return "Junior";
@@ -591,13 +679,33 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         }
     }
 
+    async function saveResults(data) {
+        if (!isDatabaseReady) {
+            showMessageBox('Database is not initialized. Results save failed.', 'error');
+            return;
+        }
+        try {
+            const key = `${data.classVal}-${data.division}-${data.gender}-${data.event}`;
+            await setDoc(doc(db, RESULTS_COLLECTION_PATH, key), data);
+            showMessageBox('Results saved successfully!', 'success');
+            closeResultsModal();
+        } catch (e) {
+            console.error("Error saving results: ", e);
+            showMessageBox('Failed to save results.', 'error');
+        }
+    }
+
     function populateFilters(registrations) {
         const availableClasses = new Set();
         const availableEvents = new Set();
         const availableCategories = new Set(Object.keys(SPORTS_EVENTS));
+        const availableDivisions = new Set();
+        const availableGenders = new Set();
         registrations.forEach(reg => {
             if (reg.class) availableClasses.add(reg.class);
             reg.events.forEach(event => availableEvents.add(event));
+            if (reg.division) availableDivisions.add(reg.division);
+            if (reg.gender) availableGenders.add(reg.gender);
         });
         const populateSelect = (selectEl, values) => {
             const currentSelected = selectEl.value;
@@ -616,6 +724,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         populateSelect(filterClass, availableClasses);
         populateSelect(filterCategory, availableCategories);
         populateSelect(filterEvent, availableEvents);
+        populateSelect(filterDivision, availableDivisions);
+        populateSelect(filterGender, availableGenders);
     }
 
     function filterAdminData() {
@@ -623,12 +733,16 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         const selectedCategory = filterCategory.value;
         const selectedClass = filterClass.value;
         const selectedEvent = filterEvent.value;
+        const selectedDivision = filterDivision.value;
+        const selectedGender = filterGender.value;
         filteredRegistrations = allRegistrations.filter(reg => {
             const textMatch = !searchTerm || reg.name.toLowerCase().includes(searchTerm) || reg.grNo.includes(searchTerm);
             const categoryMatch = !selectedCategory || reg.category === selectedCategory;
             const classMatch = !selectedClass || reg.class === selectedClass;
             const eventMatch = !selectedEvent || reg.events.includes(selectedEvent);
-            return textMatch && categoryMatch && classMatch && eventMatch;
+            const divisionMatch = !selectedDivision || reg.division === selectedDivision;
+            const genderMatch = !selectedGender || reg.gender === selectedGender;
+            return textMatch && categoryMatch && classMatch && eventMatch && divisionMatch && genderMatch;
         });
         renderAdminTable(filteredRegistrations);
     }
@@ -637,7 +751,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         adminTableBody.innerHTML = '';
         totalRegistrations.textContent = `Total: ${registrations.length}`;
         if (registrations.length === 0) {
-            adminTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">No registrations found matching the current filters.</td></tr>';
+            adminTableBody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-gray-500">No registrations found matching the current filters.</td></tr>';
             return;
         }
         registrations.forEach(reg => {
@@ -648,6 +762,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 <td>${reg.name}</td>
                 <td>${reg.grNo}</td>
                 <td>${reg.class}-${reg.division}</td>
+                <td>${reg.gender}</td>
                 <td>${reg.house}</td>
                 <td>${reg.category}</td>
                 <td>${reg.events.join(', ')}</td>
@@ -695,6 +810,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         document.getElementById('grNo').value = reg.grNo;
         document.getElementById('class').value = reg.class;
         document.getElementById('division').value = reg.division;
+        document.getElementById('gender').value = reg.gender;
         document.getElementById('house').value = reg.house;
         document.getElementById('dob').value = reg.dob;
         document.getElementById('category').value = reg.category;
@@ -777,6 +893,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     FULL NAME OF STUDENT: <span style="text-decoration: underline;">${data.name}</span> &nbsp;&nbsp;&nbsp;
     CLASS: <span style="text-decoration: underline;">${data.class}</span> &nbsp;&nbsp;&nbsp;
     DIVISION: <span style="text-decoration: underline;">${data.division}</span> &nbsp;&nbsp;&nbsp;
+    GENDER: <span style="text-decoration: underline;">${data.gender}</span> &nbsp;&nbsp;&nbsp;
     D.O.B: <span style="text-decoration: underline;">${data.dob}</span> &nbsp;&nbsp;&nbsp;
     GR NO: <span style="text-decoration: underline;">${data.grNo}</span> &nbsp;&nbsp;&nbsp;
     SPORTS HOUSE: <span style="text-decoration: underline;">${data.house}</span> &nbsp;&nbsp;&nbsp;
@@ -822,7 +939,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             </div>
         `;
         summaryTitle.textContent = '';
-        summaryDetails.innerHTML = headerHtml + fullContent;
+        summaryDetails.innerHTML = headerHtml + studentDetailsHtml + introHtml + eventsHtml + noteHtml + signatureHtml;
     }
 
     function downloadXLSX(data, filename = "sports_registrations_filtered.xlsx") {
@@ -830,7 +947,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             showMessageBox('No data to download. Please ensure your filters return results.', 'error');
             return;
         }
-        const headers = ["ID", "Name", "GR No", "Class", "Division", "House", "DOB", "Category", "Events", "Finalist Status", "Registered By", "Timestamp"];
+        const headers = ["ID", "Name", "GR No", "Class", "Division", "Gender", "House", "DOB", "Category", "Events", "Finalist Status", "Registered By", "Timestamp"];
         const worksheetData = [
             headers,
             ...data.map(reg => [
@@ -839,6 +956,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 reg.grNo,
                 reg.class,
                 reg.division,
+                reg.gender,
                 reg.house,
                 reg.dob,
                 reg.category,
@@ -853,6 +971,31 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
         XLSX.writeFile(workbook, filename);
         showMessageBox(`Downloaded ${data.length} records to XLSX.`, 'success');
+    }
+
+    function downloadResultsXLSX() {
+        if (allResults.length === 0) {
+            showMessageBox('No results to download.', 'error');
+            return;
+        }
+        const headers = ["Class", "Division", "Gender", "Event", "Finalists", "Results", "Timestamp"];
+        const worksheetData = [
+            headers,
+            ...allResults.map(res => [
+                res.classVal,
+                res.division,
+                res.gender,
+                res.event,
+                res.finalists.join(', '),
+                res.details,
+                new Date(res.timestamp).toLocaleString()
+            ])
+        ];
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
+        XLSX.writeFile(workbook, "sports_results.xlsx");
+        showMessageBox(`Downloaded ${allResults.length} result records to XLSX.`, 'success');
     }
 
     function openAdminLoginModal() {
@@ -882,10 +1025,107 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         }
     }
 
+    function openResultsModal() {
+        resultClass.value = '';
+        resultDivision.value = '';
+        resultGender.value = '';
+        resultEvent.innerHTML = '<option value="" disabled selected>Select Event</option>';
+        const allEvents = new Set();
+        Object.values(SPORTS_EVENTS).forEach(cat => cat.events.forEach(ev => allEvents.add(ev)));
+        allEvents.forEach(ev => {
+            const option = document.createElement('option');
+            option.value = ev;
+            option.textContent = ev;
+            resultEvent.appendChild(option);
+        });
+        finalistsList.classList.add('hidden');
+        finalistsContainer.innerHTML = '';
+        resultDetails.value = '';
+        resultsModal.classList.remove('hidden');
+        resultsModal.classList.add('flex');
+    }
+
+    function closeResultsModal() {
+        resultsModal.classList.add('hidden');
+        resultsModal.classList.remove('flex');
+    }
+
+    function updateFinalistsList() {
+        const classVal = resultClass.value;
+        const division = resultDivision.value;
+        const gender = resultGender.value;
+        const eventVal = resultEvent.value;
+        finalistsList.classList.add('hidden');
+        finalistsContainer.innerHTML = '';
+        if (!classVal || !division || !gender || !eventVal) return;
+        const finalists = allRegistrations.filter(reg => 
+            reg.class === classVal &&
+            reg.division === division &&
+            reg.gender === gender &&
+            reg.events.includes(eventVal) &&
+            reg.isFinalist
+        );
+        if (finalists.length > 0) {
+            finalistsContainer.innerHTML = finalists.map(f => `
+                <div class="flex items-center space-x-2">
+                    <span class="font-semibold">${f.name}</span>
+                    <input type="text" data-id="${f.id}" class="app-input flex-grow text-sm" placeholder="Enter details (e.g., time, place)" value="${f.resultDetails?.[eventVal] || ''}">
+                </div>
+            `).join('');
+            finalistsList.classList.remove('hidden');
+            finalistsContainer.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const docId = e.target.dataset.id;
+                    const value = e.target.value;
+                    // Store temporarily in the registration object
+                    const reg = allRegistrations.find(r => r.id === docId);
+                    if (reg) {
+                        reg.resultDetails = reg.resultDetails || {};
+                        reg.resultDetails[eventVal] = value;
+                    }
+                });
+            });
+        }
+    }
+
+    async function saveResults(data) {
+        if (!isDatabaseReady) {
+            showMessageBox('Database is not initialized. Results save failed.', 'error');
+            return;
+        }
+        try {
+            const key = `${data.classVal}-${data.division}-${data.gender}-${data.event}`;
+            // Update finalist details in registrations
+            const finalists = allRegistrations.filter(reg => 
+                reg.class === data.classVal &&
+                reg.division === data.division &&
+                reg.gender === data.gender &&
+                reg.events.includes(data.event) &&
+                reg.isFinalist
+            );
+            for (const finalist of finalists) {
+                const regRef = doc(db, COLLECTION_PATH, finalist.id);
+                await setDoc(regRef, { 
+                    resultDetails: finalist.resultDetails || {}
+                }, { merge: true });
+            }
+            await setDoc(doc(db, RESULTS_COLLECTION_PATH, key), data);
+            showMessageBox('Results saved successfully!', 'success');
+            closeResultsModal();
+        } catch (e) {
+            console.error("Error saving results: ", e);
+            showMessageBox('Failed to save results.', 'error');
+        }
+    }
+
     function initializeListeners() {
         dobInput.addEventListener('change', () => {
             const category = calculateCategory(dobInput.value);
-            if (category === 'invalid') {
+            if (category === 'ineligible') {
+                categoryInput.value = '';
+                showMessageBox('You are not eligible. Date of Birth must be between 2005 and 2018.', 'error');
+                eventsSection.classList.add('hidden');
+            } else if (category === '') {
                 categoryInput.value = '';
                 showMessageBox('Please enter a valid Date of Birth.', 'error');
                 eventsSection.classList.add('hidden');
@@ -904,6 +1144,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             const grNo = document.getElementById('grNo').value.trim();
             const classVal = document.getElementById('class').value;
             const division = document.getElementById('division').value;
+            const gender = document.getElementById('gender').value;
             const house = document.getElementById('house').value;
             const dob = dobInput.value;
             const category = categoryInput.value;
@@ -912,7 +1153,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 showMessageBox('GR Number must be exactly 5 digits.', 'error');
                 return;
             }
-            if (!category || category === 'invalid') {
+            if (!category || category === 'ineligible') {
                 showMessageBox('Please enter a valid Date of Birth to determine the category.', 'error');
                 return;
             }
@@ -930,11 +1171,13 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                 grNo,
                 class: classVal,
                 division,
+                gender,
                 house,
                 dob,
                 category,
                 events: selectedEvents,
                 isFinalist: reg.isFinalist || false,
+                resultDetails: reg.resultDetails || {},
                 registeredBy: currentUserId,
                 timestamp: Date.now()
             };
@@ -974,11 +1217,15 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         filterCategory.addEventListener('change', filterAdminData);
         filterClass.addEventListener('change', filterAdminData);
         filterEvent.addEventListener('change', filterAdminData);
+        filterDivision.addEventListener('change', filterAdminData);
+        filterGender.addEventListener('change', filterAdminData);
         clearFiltersBtn.addEventListener('click', () => {
             adminSearch.value = '';
             filterCategory.value = '';
             filterClass.value = '';
             filterEvent.value = '';
+            filterDivision.value = '';
+            filterGender.value = '';
             filterAdminData();
         });
         downloadCsvBtn.addEventListener('click', () => {
@@ -994,6 +1241,51 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         doneBtn.addEventListener('click', () => {
             toggleView('form');
         });
+        manageResultsBtn.addEventListener('click', openResultsModal);
+        resultCancelBtn.addEventListener('click', closeResultsModal);
+        resultSaveBtn.addEventListener('click', () => {
+            const classVal = resultClass.value;
+            const division = resultDivision.value;
+            const gender = resultGender.value;
+            const eventVal = resultEvent.value;
+            const details = resultDetails.value.trim();
+            if (!classVal || !division || !gender || !eventVal) {
+                showMessageBox('Please fill all fields.', 'error');
+                return;
+            }
+            const finalists = allRegistrations.filter(reg => 
+                reg.class === classVal &&
+                reg.division === division &&
+                reg.gender === gender &&
+                reg.events.includes(eventVal) &&
+                reg.isFinalist
+            ).map(reg => ({
+                name: reg.name,
+                details: reg.resultDetails?.[eventVal] || ''
+            }));
+            const data = {
+                classVal,
+                division,
+                gender,
+                event: eventVal,
+                finalists: finalists.map(f => f.name),
+                finalistDetails: finalists.map(f => ({ name: f.name, details: f.details })),
+                details,
+                timestamp: Date.now()
+            };
+            showConfirmationModal(
+                'Confirm Save',
+                `Save results for Class ${classVal}-${division}, Gender: ${gender}, Event: ${eventVal}?`,
+                () => saveResults(data),
+                'Save',
+                'bg-green-600'
+            );
+        });
+        downloadResultsBtn.addEventListener('click', downloadResultsXLSX);
+        resultClass.addEventListener('change', updateFinalistsList);
+        resultDivision.addEventListener('change', updateFinalistsList);
+        resultGender.addEventListener('change', updateFinalistsList);
+        resultEvent.addEventListener('change', updateFinalistsList);
     }
 
     window.onload = function() {
@@ -1005,18 +1297,28 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     userId = user.uid;
-                    const q = query(collection(db, COLLECTION_PATH));
-                    onSnapshot(q, (snapshot) => {
+                    const regQ = query(collection(db, COLLECTION_PATH));
+                    onSnapshot(regQ, (snapshot) => {
                         allRegistrations = snapshot.docs.map(doc => ({
                             id: doc.id,
                             isFinalist: doc.data().isFinalist || false,
+                            resultDetails: doc.data().resultDetails || {},
                             ...doc.data()
                         }));
                         populateFilters(allRegistrations);
                         filterAdminData();
                     }, (error) => {
                         console.error("Firestore error:", error);
-                        adminTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">Error loading data. Check console.</td></tr>';
+                        adminTableBody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-red-500">Error loading data. Check console.</td></tr>';
+                    });
+                    const resultsQ = query(collection(db, RESULTS_COLLECTION_PATH));
+                    onSnapshot(resultsQ, (snapshot) => {
+                        allResults = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data()
+                        }));
+                    }, (error) => {
+                        console.error("Firestore results error:", error);
                     });
                 } else {
                     let attempt = 0;
@@ -1061,3 +1363,4 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 </script>
 </body>
 </html>
+
