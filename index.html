@@ -1007,7 +1007,18 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     genders.forEach(gender => {
         content += `<h4 class="text-xl font-bold mt-6">${gender}s</h4>`;
         classes.forEach(classVal => {
-            content += `<h5 class="text-lg font-bold mt-4">Class ${classVal}</h5>`;
+            const classId = `class-${gender}-${classVal}`;
+            content += `
+                <div class="mt-4">
+                    <button type="button" class="toggle-class w-full text-left text-lg font-bold text-gray-900 flex items-center justify-between" data-target="${classId}">
+                        Class ${classVal}
+                        <svg class="w-5 h-5 transform transition-transform" data-target="${classId}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="${classId}" class="class-content space-y-3 mt-2"></div>
+                </div>
+            `;
             divisions.forEach(division => {
                 const students = allRegistrations.filter(reg => 
                     reg.class === classVal &&
@@ -1016,27 +1027,72 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                     reg.isFinalist
                 );
                 if (students.length === 0) return;
-                content += `<h6 class="text-md font-semibold mt-3">Division ${division}</h6>`;
+                const divisionId = `division-${gender}-${classVal}-${division}`;
+                let divisionContent = `
+                    <div class="ml-4">
+                        <button type="button" class="toggle-division w-full text-left text-md font-semibold text-gray-800 flex items-center justify-between" data-target="${divisionId}">
+                            Division ${division}
+                            <svg class="w-4 h-4 transform transition-transform" data-target="${divisionId}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="${divisionId}" class="division-content space-y-2 mt-1">
+                `;
                 const eventsSet = new Set();
                 students.forEach(stu => stu.events.forEach(ev => eventsSet.add(ev)));
                 const events = Array.from(eventsSet).sort();
                 events.forEach(eventVal => {
-                    content += `<p class="font-medium mt-2">${eventVal}</p>`;
-                    const finalists = students.filter(stu => stu.events.includes(eventVal)).map(stu => stu.name);
-                    finalists.forEach((name, index) => {
-                        content += `
+                    divisionContent += `<p class="font-medium mt-2">${eventVal}</p>`;
+                    const finalists = students.filter(stu => stu.events.includes(eventVal));
+                    finalists.forEach((stu, index) => {
+                        divisionContent += `
                             <div class="flex items-center space-x-4 mt-1">
-                                <span class="w-1/3">${name}</span>
-                                <input type="text" data-group="${classVal}-${division}-${gender}-${eventVal}" data-index="${index}" class="app-input w-2/3 result-input" placeholder="Enter time/result">
+                                <span class="w-1/3">${stu.name} (${stu.house})</span>
+                                <input type="text" data-group="${classVal}-${division}-${gender}-${eventVal}" data-index="${index}" data-house="${stu.house}" class="app-input w-2/3 result-input" placeholder="Enter time/result">
                             </div>
                         `;
                     });
                 });
+                divisionContent += `</div></div>`;
+                content += divisionContent;
             });
         });
     });
     finalistsList.innerHTML = content;
     finalistsList.classList.remove('hidden');
+
+    // Add event listeners for toggle buttons
+    document.querySelectorAll('.toggle-class').forEach(button => {
+        button.addEventListener('click', () => {
+            const targetId = button.dataset.target;
+            const contentDiv = document.getElementById(targetId);
+            const svg = button.querySelector('svg');
+            if (contentDiv.classList.contains('hidden')) {
+                contentDiv.classList.remove('hidden');
+                svg.classList.add('rotate-180');
+            } else {
+                contentDiv.classList.add('hidden');
+                svg.classList.remove('rotate-180');
+            }
+        });
+    });
+    document.querySelectorAll('.toggle-division').forEach(button => {
+        button.addEventListener('click', () => {
+            const targetId = button.dataset.target;
+            const contentDiv = document.getElementById(targetId);
+            const svg = button.querySelector('svg');
+            if (contentDiv.classList.contains('hidden')) {
+                contentDiv.classList.remove('hidden');
+                svg.classList.add('rotate-180');
+            } else {
+                contentDiv.classList.add('hidden');
+                svg.classList.remove('rotate-180');
+            }
+        });
+    });
+
+    // Initially collapse all divisions
+    document.querySelectorAll('.division-content').forEach(div => div.classList.add('hidden'));
 }
 
     function initializeListeners() {
@@ -1170,8 +1226,9 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         if (input.value.trim()) {
             const group = input.dataset.group;
             const index = input.dataset.index;
+            const house = input.dataset.house;
             if (!groups[group]) groups[group] = [];
-            groups[group].push({ index: parseInt(index), value: input.value.trim() });
+            groups[group].push({ index: parseInt(index), value: input.value.trim(), house });
         }
     });
     if (Object.keys(groups).length === 0) {
@@ -1191,11 +1248,11 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
                         reg.gender === gender &&
                         reg.isFinalist
                     );
-                    const finalists = students.filter(stu => stu.events.includes(eventVal)).map(stu => stu.name);
+                    const finalists = students.filter(stu => stu.events.includes(eventVal));
                     let details = '';
                     groups[group].sort((a, b) => a.index - b.index).forEach(entry => {
-                        const name = finalists[entry.index];
-                        details += `${name}: ${entry.value}\n`;
+                        const stu = finalists[entry.index];
+                        details += `${stu.name} (${stu.house}): ${entry.value}\n`;
                     });
                     const data = {
                         classVal,
