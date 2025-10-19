@@ -113,7 +113,43 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     <div class="bg-white rounded-3xl p-8 w-11/12 max-w-4xl shadow-2xl border border-gray-200">
         <h3 class="text-2xl font-extrabold text-gray-900 mb-4 border-b border-blue-500 pb-2">Manage All Event Results</h3>
         <div class="space-y-4">
-            <div id="finalistsList" class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 font-medium hidden space-y-4 overflow-y-auto max-h-[70vh]"></div>
+            <input type="text" id="resultsSearch" class="app-input w-full mb-4" placeholder="Search students, classes, divisions, events, or houses...">
+            <div class="flex space-x-4 mb-4">
+                <select id="resultClassFilter" class="app-input w-1/4">
+                    <option value="">All Classes</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                </select>
+                <select id="resultDivisionFilter" class="app-input w-1/4">
+                    <option value="">All Divisions</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="E">E</option>
+                    <option value="F">F</option>
+                    <option value="G">G</option>
+                    <option value="H">H</option>
+                    <option value="I">I</option>
+                    <option value="J">J</option>
+                </select>
+                <select id="resultGenderFilter" class="app-input w-1/4">
+                    <option value="">All Genders</option>
+                    <option value="Boy">Boys</option>
+                    <option value="Girl">Girls</option>
+                </select>
+                <select id="resultEventFilter" class="app-input w-1/4">
+                    <option value="">All Events</option>
+                </select>
+            </div>
+            <div id="finalistsList" class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-gray-800 font-medium hidden space-y-4 overflow-y-auto max-h-[60vh]"></div>
         </div>
         <div class="flex justify-end space-x-3 mt-6">
             <button id="resultCancelBtn" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition shadow-md">Cancel</button>
@@ -1003,96 +1039,136 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const genders = ['Boy', 'Girl'];
     const classes = ['4', '5', '6', '7', '8', '9', '10', '11', '12'];
     const divisions = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-    let content = '';
-    genders.forEach(gender => {
-        content += `<h4 class="text-xl font-bold mt-6">${gender}s</h4>`;
-        classes.forEach(classVal => {
-            const classId = `class-${gender}-${classVal}`;
-            content += `
-                <div class="mt-4">
-                    <button type="button" class="toggle-class w-full text-left text-lg font-bold text-gray-900 flex items-center justify-between" data-target="${classId}">
-                        Class ${classVal}
-                        <svg class="w-5 h-5 transform transition-transform" data-target="${classId}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
-                    <div id="${classId}" class="class-content space-y-3 mt-2"></div>
-                </div>
-            `;
-            divisions.forEach(division => {
-                const students = allRegistrations.filter(reg => 
-                    reg.class === classVal &&
-                    reg.division === division &&
-                    reg.gender === gender &&
-                    reg.isFinalist
-                );
-                if (students.length === 0) return;
-                const divisionId = `division-${gender}-${classVal}-${division}`;
-                let divisionContent = `
-                    <div class="ml-4">
-                        <button type="button" class="toggle-division w-full text-left text-md font-semibold text-gray-800 flex items-center justify-between" data-target="${divisionId}">
-                            Division ${division}
-                            <svg class="w-4 h-4 transform transition-transform" data-target="${divisionId}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    
+    // Populate events dropdown
+    const resultEventFilter = document.getElementById('resultEventFilter');
+    resultEventFilter.innerHTML = '<option value="">All Events</option>';
+    const allEvents = new Set();
+    allRegistrations.forEach(reg => reg.events.forEach(ev => allEvents.add(ev)));
+    Array.from(allEvents).sort().forEach(ev => {
+        const option = document.createElement('option');
+        option.value = ev;
+        option.textContent = ev;
+        resultEventFilter.appendChild(option);
+    });
+
+    function updateFilteredList() {
+        const searchTerm = document.getElementById('resultsSearch').value.toLowerCase();
+        const classFilter = document.getElementById('resultClassFilter').value;
+        const divisionFilter = document.getElementById('resultDivisionFilter').value;
+        const genderFilter = document.getElementById('resultGenderFilter').value;
+        const eventFilter = document.getElementById('resultEventFilter').value;
+
+        let content = '';
+        genders.forEach(gender => {
+            if (genderFilter && gender !== genderFilter) return;
+            content += `<h4 class="text-xl font-bold mt-6">${gender}s</h4>`;
+            classes.forEach(classVal => {
+                if (classFilter && classVal !== classFilter) return;
+                const classId = `class-${gender}-${classVal}`;
+                content += `
+                    <div class="mt-4">
+                        <button type="button" class="toggle-class w-full text-left text-lg font-bold text-gray-900 flex items-center justify-between" data-target="${classId}">
+                            Class ${classVal}
+                            <svg class="w-5 h-5 transform transition-transform" data-target="${classId}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div id="${divisionId}" class="division-content space-y-2 mt-1">
+                        <div id="${classId}" class="class-content space-y-3 mt-2"></div>
+                    </div>
                 `;
-                const eventsSet = new Set();
-                students.forEach(stu => stu.events.forEach(ev => eventsSet.add(ev)));
-                const events = Array.from(eventsSet).sort();
-                events.forEach(eventVal => {
-                    divisionContent += `<p class="font-medium mt-2">${eventVal}</p>`;
-                    const finalists = students.filter(stu => stu.events.includes(eventVal));
-                    finalists.forEach((stu, index) => {
-                        divisionContent += `
-                            <div class="flex items-center space-x-4 mt-1">
-                                <span class="w-1/3">${stu.name} (${stu.house})</span>
-                                <input type="text" data-group="${classVal}-${division}-${gender}-${eventVal}" data-index="${index}" data-house="${stu.house}" class="app-input w-2/3 result-input" placeholder="Enter time/result">
-                            </div>
-                        `;
+                divisions.forEach(division => {
+                    if (divisionFilter && division !== divisionFilter) return;
+                    const students = allRegistrations.filter(reg => 
+                        reg.class === classVal &&
+                        reg.division === division &&
+                        reg.gender === gender &&
+                        reg.isFinalist &&
+                        (!eventFilter || reg.events.includes(eventFilter)) &&
+                        (searchTerm === '' || 
+                            reg.name.toLowerCase().includes(searchTerm) ||
+                            classVal.toLowerCase().includes(searchTerm) ||
+                            division.toLowerCase().includes(searchTerm) ||
+                            reg.events.some(ev => ev.toLowerCase().includes(searchTerm)) ||
+                            reg.house.toLowerCase().includes(searchTerm))
+                    );
+                    if (students.length === 0) return;
+                    const divisionId = `division-${gender}-${classVal}-${division}`;
+                    let divisionContent = `
+                        <div class="ml-4">
+                            <button type="button" class="toggle-division w-full text-left text-md font-semibold text-gray-800 flex items-center justify-between" data-target="${divisionId}">
+                                Division ${division}
+                                <svg class="w-4 h-4 transform transition-transform" data-target="${divisionId}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div id="${divisionId}" class="division-content space-y-2 mt-1">
+                    `;
+                    const eventsSet = new Set();
+                    students.forEach(stu => stu.events.forEach(ev => eventsSet.add(ev)));
+                    const events = Array.from(eventsSet).sort();
+                    events.forEach(eventVal => {
+                        if (eventFilter && eventVal !== eventFilter) return;
+                        divisionContent += `<p class="font-medium mt-2">${eventVal}</p>`;
+                        const finalists = students.filter(stu => stu.events.includes(eventVal));
+                        finalists.forEach((stu, index) => {
+                            divisionContent += `
+                                <div class="flex items-center space-x-4 mt-1">
+                                    <span class="w-1/3">${stu.name} (${stu.house})</span>
+                                    <input type="text" data-group="${classVal}-${division}-${gender}-${eventVal}" data-index="${index}" data-house="${stu.house}" class="app-input w-2/3 result-input" placeholder="Enter time/result">
+                                </div>
+                            `;
+                        });
                     });
+                    divisionContent += `</div></div>`;
+                    content += divisionContent;
                 });
-                divisionContent += `</div></div>`;
-                content += divisionContent;
             });
         });
-    });
-    finalistsList.innerHTML = content;
-    finalistsList.classList.remove('hidden');
+        finalistsList.innerHTML = content;
+        finalistsList.classList.remove('hidden');
 
-    // Add event listeners for toggle buttons
-    document.querySelectorAll('.toggle-class').forEach(button => {
-        button.addEventListener('click', () => {
-            const targetId = button.dataset.target;
-            const contentDiv = document.getElementById(targetId);
-            const svg = button.querySelector('svg');
-            if (contentDiv.classList.contains('hidden')) {
-                contentDiv.classList.remove('hidden');
-                svg.classList.add('rotate-180');
-            } else {
-                contentDiv.classList.add('hidden');
-                svg.classList.remove('rotate-180');
-            }
+        // Add event listeners for toggle buttons
+        document.querySelectorAll('.toggle-class').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.target;
+                const contentDiv = document.getElementById(targetId);
+                const svg = button.querySelector('svg');
+                if (contentDiv.classList.contains('hidden')) {
+                    contentDiv.classList.remove('hidden');
+                    svg.classList.add('rotate-180');
+                } else {
+                    contentDiv.classList.add('hidden');
+                    svg.classList.remove('rotate-180');
+                }
+            });
         });
-    });
-    document.querySelectorAll('.toggle-division').forEach(button => {
-        button.addEventListener('click', () => {
-            const targetId = button.dataset.target;
-            const contentDiv = document.getElementById(targetId);
-            const svg = button.querySelector('svg');
-            if (contentDiv.classList.contains('hidden')) {
-                contentDiv.classList.remove('hidden');
-                svg.classList.add('rotate-180');
-            } else {
-                contentDiv.classList.add('hidden');
-                svg.classList.remove('rotate-180');
-            }
+        document.querySelectorAll('.toggle-division').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.target;
+                const contentDiv = document.getElementById(targetId);
+                const svg = button.querySelector('svg');
+                if (contentDiv.classList.contains('hidden')) {
+                    contentDiv.classList.remove('hidden');
+                    svg.classList.add('rotate-180');
+                } else {
+                    contentDiv.classList.add('hidden');
+                    svg.classList.remove('rotate-180');
+                }
+            });
         });
-    });
 
-    // Initially collapse all divisions
-    document.querySelectorAll('.division-content').forEach(div => div.classList.add('hidden'));
+        // Initially collapse all divisions
+        document.querySelectorAll('.division-content').forEach(div => div.classList.add('hidden'));
+    }
+
+    // Initialize list and add event listeners for search and filters
+    updateFilteredList();
+    document.getElementById('resultsSearch').addEventListener('input', updateFilteredList);
+    document.getElementById('resultClassFilter').addEventListener('change', updateFilteredList);
+    document.getElementById('resultDivisionFilter').addEventListener('change', updateFilteredList);
+    document.getElementById('resultGenderFilter').addEventListener('change', updateFilteredList);
+    document.getElementById('resultEventFilter').addEventListener('change', updateFilteredList);
 }
 
     function initializeListeners() {
