@@ -960,13 +960,35 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
     }
 
     function renderSummary(data) {
-    if (!data) return;
-    const numEvents = data.events.length; // Use the actual number of selected events
-    const headerHtml = `
-        <header class="mb-6 flex items-center justify-center">
-            <img src="images/sunrise-school-logo.png" alt="Sunrise English Private School Logo" style="width: 1000px; height: auto; margin-right: 15px;" class="logo-title">
-        </header>
-    `;
+            if (!data) return;
+            
+            // The numEvents variable is kept as it was part of the original function context
+            const numEvents = data.events.length; 
+            
+            // Replaced the image tag with the desired text content, centered and aligned.
+            const headerHtml = `
+                <header class="mb-6 text-center p-4">
+                    <div class="space-y-1">
+                        <!-- Primary Name (Bold and slightly larger) -->
+                        <h1 class="text-xl font-bold">
+                            SUNRISE ENGLISH PRIVATE SCHOOL, L.L.C, O.P.C
+                        </h1>
+
+                        <!-- Location -->
+                        <p class="text-base">MUSSAFAH, ABU DHABI</p>
+                        
+                        <!-- Arabic Name (Right-to-left direction) -->
+                        <p class="text-lg font-medium" dir="rtl">
+                            مدرسة الشروق الإنجليزية الخاصة - ذ.م.م - ش.ش.و
+                        </p>
+
+                        <!-- Affiliation Details (Small text) -->
+                        <p class="text-xs">
+                            (Recognized by ADEK, UAE & Affiliated (No 6630033) to CBSE, New Delhi)
+                        </p>
+                    </div>
+                </header>
+            `;
     const greetingsHtml = `
         <p>Dear Parents,</p>
         <p>Greetings!</p>
