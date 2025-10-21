@@ -603,6 +603,53 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
     let allResults = [];
     let lastSubmittedData = null;
 
+    // --- Timer Variables and Logic ---
+    const TIME_LIMIT_MINUTES = 10; // 👈 You can change the time limit here!
+    let timeRemaining = TIME_LIMIT_MINUTES * 60; // seconds
+
+    // 1. Create a display element and append it to the body (outside the main card)
+    const timerDisplay = document.createElement('div');
+    timerDisplay.id = 'timerDisplay';
+    timerDisplay.className = 'fixed top-0 left-1/2 transform -translate-x-1/2 mt-3 p-2 px-4 bg-yellow-400 text-gray-900 font-bold rounded-lg shadow-xl z-50 transition-all duration-300';
+    document.body.appendChild(timerDisplay);
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimer() {
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = "TIME UP! Registration closed.";
+            timerDisplay.classList.remove('bg-yellow-400', 'text-gray-900', 'bg-red-500', 'text-white');
+            timerDisplay.classList.add('bg-red-600', 'text-white', 'animate-shake');
+            
+            // Disable the entire form
+            sportsForm.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+            
+            // Assuming showMessageBox is defined (it is in your code)
+            showMessageBox("Time has expired. Please refresh to try again.", 'error');
+            return;
+        }
+
+        if (timeRemaining <= 60 && timeRemaining > 0) {
+            // Highlight red when 60 seconds remain
+            timerDisplay.classList.remove('bg-yellow-400', 'text-gray-900');
+            timerDisplay.classList.add('bg-red-500', 'text-white');
+        }
+
+        timerDisplay.textContent = `Time Remaining: ${formatTime(timeRemaining)}`;
+        timeRemaining--;
+    }
+
+    // 2. Start the timer when the script runs
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer(); // Initial call to display the timer immediately
+
+    // --- End of Timer Code ---
+
     function showMessageBox(message, type) {
         messageBox.textContent = message;
         messageBox.classList.remove('hidden', 'bg-red-500', 'bg-green-500', 'animate-shake');
