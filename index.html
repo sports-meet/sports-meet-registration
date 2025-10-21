@@ -66,20 +66,94 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
 /* --- PRINT/PDF STYLING --- */
 @media print {
-    @page { margin: 1cm !important; }
-    body > *:not(#printArea):not(#printArea *) { display: none !important; }
-    #printArea { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; max-width: 21cm; background-color: white !important; }
-    #printArea .app-card { box-shadow: none !important; border: none !important; padding: 10px !important; background-color: white !important; }
-    #printArea * { color: black !important; background-color: white !important; }
-    #savePdfBtn, #doneBtn { display: none !important; }
-    #printArea header h1 { font-weight: 800 !important; text-align: center !important; font-size: 1rem; line-height: 1.1; }
-    #printArea header h2 { text-align: center !important; font-size: 0.9rem; font-weight: 700 !important; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #333; }
-    .print-info-section p { display: flex; align-items: flex-end; margin-bottom: 5px; font-size: 0.85rem; }
-    .print-info-section .grid { display: flex; gap: 10px; }
-    #printArea .events-list-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-left: 10px; }
-    #printArea .events-list-grid > div { font-size: 0.8rem; }
-    .print-info-section, .border-t, .pt-4 { padding-top: 10px !important; margin-top: 10px !important; }
-    .space-y-8 { --space-y-reverse: 0; margin-top: 0; }
+    @page {
+        margin: 0.5cm !important; /* Reduced margins */
+        size: A4 portrait;
+    }
+    body > *:not(#printArea):not(#printArea *) {
+        display: none !important;
+    }
+    #printArea {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 19.5cm !important; /* Slightly less than A4 width to account for margins */
+        background-color: white !important;
+        box-sizing: border-box !important;
+        font-size: 10pt !important; /* Smaller base font size */
+        line-height: 1.2 !important; /* Tighter line spacing */
+    }
+    #printArea .app-card {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 5px !important; /* Reduced padding */
+        background-color: white !important;
+    }
+    #printArea * {
+        color: black !important;
+        background-color: white !important;
+    }
+    #printArea header h1 {
+        font-weight: 800 !important;
+        text-align: center !important;
+        font-size: 12pt !important; /* Reduced from 1rem (likely 16pt) */
+        line-height: 1.1 !important;
+        margin-bottom: 2px !important;
+    }
+    #printArea header h2 {
+        text-align: center !important;
+        font-size: 8pt !important; /* Reduced */
+        font-weight: 700 !important;
+        margin-bottom: 5px !important;
+        padding-bottom: 2px !important;
+        border-bottom: 1px solid #333 !important;
+    }
+    .print-info-section p {
+        display: flex !important;
+        align-items: flex-end !important;
+        margin-bottom: 2px !important; /* Reduced */
+        font-size: 8pt !important; /* Reduced */
+    }
+    .print-info-section .grid {
+        display: flex !important;
+        gap: 5px !important; /* Reduced */
+    }
+    #printArea .events-list {
+        margin-left: 0 !important;
+        list-style-position: inside !important;
+    }
+    #printArea .events-list li {
+        font-size: 8pt !important; /* Reduced */
+        margin-bottom: 2px !important; /* Reduced */
+    }
+    .print-info-section, .border-t, .pt-4 {
+        padding-top: 5px !important; /* Reduced */
+        margin-top: 5px !important; /* Reduced */
+    }
+    .space-y-8 {
+        --space-y-reverse: 0;
+        margin-top: 0 !important;
+    }
+    .underline {
+        border-bottom: 1px solid black !important;
+        display: inline-block !important;
+        min-width: 150px !important; /* Slightly reduced */
+    }
+    .underline-short {
+        min-width: 40px !important; /* Reduced */
+    }
+    .underline-medium {
+        min-width: 80px !important; /* Reduced */
+    }
+    #savePdfBtn, #doneBtn, #previewPdfBtn {
+        display: none !important;
+    }
+    #printArea img {
+        width: 60px !important; /* Reduced logo size */
+        height: auto !important;
+        margin-right: 5px !important; /* Reduced */
+    }
 }
 </style>
 </head>
@@ -864,10 +938,10 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     if (!data) return;
     const numEvents = data.events.length; // Use the actual number of selected events
     const headerHtml = `
-        <header class="mb-6 flex items-center">
-            <img src="https://schoolfinder.ae/wp-content/uploads/2022/05/10292.jpeg" alt="Sunrise English Private School Logo" style="width: 80px; height: auto; margin-right: 10px;">
+        <header class="mb-2 flex items-center">
+            <img src="https://schoolfinder.ae/wp-content/uploads/2022/05/10292.jpeg" alt="Sunrise English Private School Logo" style="width: 60px; height: auto; margin-right: 5px;">
             <div>
-                <h1 class="text-xl font-extrabold text-gray-900 leading-tight">SUNRISE ENGLISH PRIVATE SCHOOL, L.L.C, O.P.C, Mussafah, Abu Dhabi</h1>
+                <h1 class="text-lg font-extrabold text-gray-900 leading-tight">SUNRISE ENGLISH PRIVATE SCHOOL, L.L.C, O.P.C, Mussafah, Abu Dhabi</h1>
                 <p class="text-sm text-gray-600">(Recognized by ADEK, UAE & Affiliated (No 6630033) to CBSE, New Delhi)</p>
             </div>
         </header>
@@ -875,7 +949,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     const greetingsHtml = `
         <p>Greetings!</p>
         <p>We are pleased to inform you that the Annual Sports Meet for Boys and Girls will be held on the following dates:</p>
-        <ul class="list-disc ml-6">
+        <ul class="list-disc ml-4">
             <li>26th & 27th November 2025 (Wednesday & Thursday)</li>
             <li>8th December 2025 (Monday)</li>
         </ul>
@@ -883,18 +957,18 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     `;
     const noteHtml = `
         <p><strong>Please Note:</strong></p>
-        <ul class="list-disc ml-6">
+        <ul class="list-disc ml-4">
             <li>House-wise Relay (4x100 meters): This event will be held for Inter, Senior, and Super Senior categories only.</li>
             <li>Track Event Selection: Athletes will be selected based on their timing performance.</li>
             <li>Selection Process for Track Events:</li>
-            <ul class="list-circle ml-6">
+            <ul class="list-circle ml-4">
                 <li>A time trial will be conducted.</li>
                 <li>The top 8 athletes with the best times will qualify for the finals.</li>
             </ul>
             <li>Selection for Long Jump and Shot Put: Based on the distance achieved by the athletes.</li>
             <li>Entry Submission: All entries must be submitted on or before 24th October 2025</li>
         </ul>
-        <p class="text-left mt-4"><strong>PRINCIPAL.</strong></p>
+        <p class="text-left mt-2"><strong>PRINCIPAL.</strong></p>
     `;
     const studentDetailsHtml = `
         <p>Full name of the student: <span class="underline">${data.name}</span> GR NO: <span class="underline underline-short">${data.grNo}</span></p>
@@ -902,14 +976,14 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         <p>Date of Birth (As per school record): <span class="underline underline-medium">${data.dob}</span></p>
     `;
     const eventsHtml = `
-        <p class="mt-8">My ward will participate in the following events for the Annual Sports Meet</p>
-        <ol class="events-list list-decimal ml-6">
+        <p class="mt-4">My ward will participate in the following events for the Annual Sports Meet</p>
+        <ol class="events-list list-decimal ml-4">
             ${data.events.map(event => `<li>${event}</li>`).join('')}
             ${numEvents === 0 ? '<li></li>' : ''} <!-- Add one blank line if no events selected -->
         </ol>
     `;
     const signatureHtml = `
-        <p class="mt-8">Parents signature <span class="underline"></span></p>
+        <p class="mt-4">Parents signature <span class="underline"></span></p>
     `;
     summaryTitle.textContent = '';
     summaryDetails.innerHTML = headerHtml + greetingsHtml + noteHtml + studentDetailsHtml + eventsHtml + signatureHtml;
