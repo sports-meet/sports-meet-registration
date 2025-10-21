@@ -862,7 +862,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
     function renderSummary(data) {
     if (!data) return;
-    const maxEvents = 3; // Fixed to 3 lines as per the attached PDF (empty if fewer selected)
+    const categoryData = SPORTS_EVENTS[data.category] || { maxEvents: 3 }; // Default to 3 if category not found
+    const maxEvents = categoryData.maxEvents;
     const headerHtml = `
         <header class="mb-6 flex items-center">
             <img src="https://schoolfinder.ae/wp-content/uploads/2022/05/10292.jpeg" alt="Sunrise English Private School Logo" style="width: 80px; height: auto; margin-right: 10px;">
