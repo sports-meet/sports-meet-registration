@@ -278,83 +278,85 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
         </div>
 
         <form id="sportsForm" class="space-y-6">
-    <div>
-        <label for="name" class="block text-sm font-semibold text-gray-700">Full Name</label>
-        <input type="text" id="name" class="app-input" required>
-    </div>
+            <div>
+                <label for="name" class="block text-sm font-semibold text-gray-700">Full Name</label>
+                <input type="text" id="name" class="app-input" required>
+            </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-        <div>
-            <label for="grNo" class="block text-sm font-semibold text-gray-700">GR Number (5 digits)</label>
-            <input type="text" id="grNo" maxlength="5" pattern="\d{5}" class="app-input" required>
-        </div>
-        <div>
-            <label for="class" class="block text-sm font-semibold text-gray-700">Class</label>
-            <select id="class" class="app-input" required>
-                <option value="" disabled selected>Select Class</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
-            </select>
-        </div>
-        <div>
-            <label for="division" class="block text-sm font-semibold text-gray-700">Division</label>
-            <select id="division" class="app-input" required>
-                <option value="" disabled selected>Select Division</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-                <option value="E">E</option>
-                <option value="F">F</option>
-                <option value="G">G</option>
-                <option value="H">H</option>
-                <option value="I">I</option>
-                <option value="J">J</option>
-            </select>
-        </div>
-        <div>
-            <label for="gender" class="block text-sm font-semibold text-gray-700">Gender</label>
-            <select id="gender" class="app-input" required>
-                <option value="" disabled selected>Select Gender</option>
-                <option value="Boy">Boy</option>
-                <option value="Girl">Girl</option>
-            </select>
-        </div>
-        <div>
-            <label for="house" class="block text-sm font-semibold text-gray-700">Sports House</label>
-            <select id="house" class="app-input appearance-none bg-gray-50" required>
-                <option value="" disabled selected>Select House</option>
-                <option value="Ruby">Ruby</option>
-                <option value="Sapphire">Sapphire</option>
-                <option value="Topaz">Topaz</option>
-                <option value="Emerald">Emerald</option>
-            </select>
-        </div>
-        <div>
-            <label for="dob" class="block text-sm font-semibold text-gray-700">Date of Birth</label>
-            <input type="date" id="dob" min="2005-01-01" max="2018-12-31" class="app-input" required>
-        </div>
-        <div>
-            <label for="category" class="block text-sm font-semibold text-gray-700">Calculated Category</label>
-            <input type="text" id="category" class="app-input bg-gray-100 text-gray-800 font-bold" readonly placeholder="Enter DOB to calculate">
-        </div>
-    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+                <div>
+                    <label for="grNo" class="block text-sm font-semibold text-gray-700">GR Number (5 digits)</label>
+                    <input type="text" id="grNo" maxlength="5" pattern="\d{5}" class="app-input" required>
+                </div>
+                <div>
+                    <label for="class" class="block text-sm font-semibold text-gray-700">Class</label>
+                    <select id="class" class="app-input" required>
+                        <option value="" disabled selected>Select Class</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="division" class="block text-sm font-semibold text-gray-700">Division</label>
+                    <select id="division" class="app-input" required>
+                        <option value="" disabled selected>Select Division</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="G">G</option>
+                        <option value="H">H</option>
+                        <option value="I">I</option>
+                        <option value="J">J</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="gender" class="block text-sm font-semibold text-gray-700">Gender</label>
+                    <select id="gender" class="app-input" required>
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="Boy">Boy</option>
+                        <option value="Girl">Girl</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="house" class="block text-sm font-semibold text-gray-700">Sports House</label>
+                    <select id="house" class="app-input appearance-none bg-gray-50" required>
+                        <option value="" disabled selected>Select House</option>
+                        <option value="Ruby">Ruby</option>
+                        <option value="Sapphire">Sapphire</option>
+                        <option value="Topaz">Topaz</option>
+                        <option value="Emerald">Emerald</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="dob" class="block text-sm font-semibold text-gray-700">Date of Birth</label>
+                    <input type="date" id="dob" min="2005-01-01" max="2018-12-31" class="app-input" required>
+                </div>
+                <div>
+                    <label for="category" class="block text-sm font-semibold text-gray-700">Calculated Category</label>
+                    <input type="text" id="category" class="app-input bg-gray-100 text-gray-800 font-bold" readonly placeholder="Enter DOB to calculate">
+                </div>
+            </div>
 
-    <div id="eventsSection" class="hidden mt-8 p-4 sm:p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 shadow-inner">
-        <label class="block text-lg font-bold text-gray-800 mb-3">Select Events</label>
-        <div id="eventList" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
-        <p id="eventNote" class="text-sm text-gray-600 mt-4 font-medium"></p>
-    </div>
+            <div id="eventsSection" class="hidden mt-8 p-4 sm:p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 shadow-inner">
+                <label class="block text-lg font-bold text-gray-800 mb-3">Select Events</label>
+                <div id="eventList" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+                <p id="eventNote" class="text-sm text-gray-600 mt-4 font-medium"></p>
+            </div>
 
-    <button type="submit" class="app-button app-button-green mt-10 w-full" data-editing-id="">Submit Registration</button>
-</form>
+            <button type="submit" class="submit-input mt-10 w-full" data-editing-id="">Submit Registration</button>
+        </form>
+    </div>
+</div>
 
 <div id="printArea" class="hidden w-full max-w-6xl mx-auto flex items-start justify-center p-4 md:p-8">
     <div class="app-card w-full max-w-4xl space-y-8">
@@ -961,34 +963,12 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
 
     function renderSummary(data) {
     if (!data) return;
-    const numEvents = data.events.length;
+    const numEvents = data.events.length; // Use the actual number of selected events
     const headerHtml = `
-        <header class="mb-6 text-center p-4">
-            <div class="space-y-1">
-                <!-- Primary Name (Bold and slightly larger) -->
-                <h1 class="text-xl font-bold">
-                    SUNRISE ENGLISH PRIVATE SCHOOL, L.L.C, O.P.C
-                </h1>
-
-                <!-- Location -->
-                <p class="text-base">
-                    MUSSAFAH, ABU DHABI
-                </p>
-                
-                <!-- Arabic Name (Right-to-left direction) -->
-                <p class="text-lg font-medium" dir="rtl">
-                    مدرسة الشروق الإنجليزية الخاصة - ذ.م.م - ش.ش.و
-                </p>
-
-                <!-- Affiliation Details (Small text) -->
-                <p class="text-xs">
-                    (Recognized by ADEK, UAE & Affiliated (No 6630033) to CBSE, New Delhi)
-                </p>
-            </div>
+        <header class="mb-4 flex items-center justify-center">
+            <img src="images/sunrise-school-logo.png" alt="Sunrise English Private School Logo" style="width: 600px; height: auto; margin-right: 10px;">
         </header>
     `;
-}
-
     const greetingsHtml = `
         <p>Dear Parents,</p>
         <p>Greetings!</p>
