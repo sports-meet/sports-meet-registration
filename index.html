@@ -862,8 +862,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
 
     function renderSummary(data) {
     if (!data) return;
-    const categoryData = SPORTS_EVENTS[data.category] || { maxEvents: 3 }; // Default to 3 if category not found
-    const maxEvents = categoryData.maxEvents;
+    const numEvents = data.events.length; // Use the actual number of selected events
     const headerHtml = `
         <header class="mb-6 flex items-center">
             <img src="https://schoolfinder.ae/wp-content/uploads/2022/05/10292.jpeg" alt="Sunrise English Private School Logo" style="width: 80px; height: auto; margin-right: 10px;">
@@ -906,7 +905,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
         <p class="mt-8">My ward will participate in the following events for the Annual Sports Meet</p>
         <ol class="events-list list-decimal ml-6">
             ${data.events.map(event => `<li>${event}</li>`).join('')}
-            ${Array.from({ length: maxEvents - data.events.length }).map(() => `<li></li>`).join('')}
+            ${numEvents === 0 ? '<li></li>' : ''} <!-- Add one blank line if no events selected -->
         </ol>
     `;
     const signatureHtml = `
