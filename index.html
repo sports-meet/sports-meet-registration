@@ -156,28 +156,28 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     }
 
     /* New breathing animation style for submit button */
-    .submit-input {
-        background-color: #4CAF50;
-        color: white;
-        padding: 15px 32px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: bold;
-        transition: all 0.3s ease-in-out;
-        animation: breathe 2s infinite;
+    #sportsForm .submit-input {
+        background-color: #4CAF50 !important;
+        color: white !important;
+        padding: 15px 32px !important;
+        border: none !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
+        transition: all 0.3s ease-in-out !important;
+        animation: breathe 2s infinite !important;
     }
 
-    .submit-input:hover {
-        background-color: #45a049;
-        animation-play-state: paused;
+    #sportsForm .submit-input:hover {
+        background-color: #45a049 !important;
+        animation-play-state: paused !important;
     }
 
     @keyframes breathe {
-        0% { transform: scale(1); }
-        50% { transform: scale(0.95); }
-        100% { transform: scale(1); }
+        0% { transform: scale(1) !important; }
+        50% { transform: scale(0.95) !important; }
+        100% { transform: scale(1) !important; }
     }
 </style>
 </head>
