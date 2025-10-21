@@ -967,18 +967,17 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
     const headerHtml = `
         <header class="mb-4 flex items-center justify-center">
             <img src="images/sunrise-school-logo.png" alt="Sunrise English Private School Logo" style="width: 300px; height: auto; margin-right: 10px;">
-            <div>
-                <p class="text-base text-gray-600">(Recognized by ADEK, UAE & Affiliated (No 6630033) to CBSE, New Delhi)</p>
-            </div>
         </header>
     `;
     const greetingsHtml = `
+        <p>Dear Parents,</p>
         <p>Greetings!</p>
-        <p>We are pleased to inform you that the Annual Sports Meet for Boys and Girls will be held at Zayed Sports City, Abu Dhabi on the following dates:</p>
+        <p>We are pleased to inform you that the Annual Sports Meet for Boys and Girls will be held on the following dates:</p>
         <ul class="list-disc ml-4">
             <li>26th & 27th November 2025 (Wednesday & Thursday)</li>
             <li>8th December 2025 (Monday)</li>
         </ul>
+        <p>Kindly fill in the details of your ward in the form provided below. Your cooperation and support are highly appreciated to make this event a great success.</p>
     `;
     const noteHtml = `
         <p><strong>Please Note:</strong></p>
@@ -986,29 +985,29 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
             <li>House-wise Relay (4x100 meters): This event will be held for Inter, Senior, and Super Senior categories only.</li>
             <li>Track Event Selection: Athletes will be selected based on their timing performance.</li>
             <li>Selection Process for Track Events:</li>
-            <ul class="list-circle ml-4">
+            <ul class="list-circle ml-6">
                 <li>A time trial will be conducted.</li>
                 <li>The top 8 athletes with the best times will qualify for the finals.</li>
             </ul>
             <li>Selection for Long Jump and Shot Put: Based on the distance achieved by the athletes.</li>
-            <li>Entry Submission: All entries must be submitted on or before 31th October 2025</li>
+            <li>Entry Submission: All entries must be submitted on or before 24th October 2025</li>
         </ul>
-        <p class="text-left mt-2"><strong>PRINCIPAL.</strong></p>
+        <p><strong>PRINCIPAL.</strong></p>
     `;
     const studentDetailsHtml = `
-        <p>Full name of the student: <span class="underline">${data.name}</span> GR NO: <span class="underline underline-short">${data.grNo}</span></p>
-        <p>Class: <span class="underline underline-short">${data.class}</span> Division: <span class="underline underline-short">${data.division}</span> Sports House: <span class="underline underline-medium">${data.house}</span></p>
-        <p>Date of Birth (As per school record): <span class="underline underline-medium">${data.dob}</span></p>
+        <p>Full name of the student: <span class="underline" style="min-width: 200px;">${data.name}</span> GR NO: <span class="underline" style="min-width: 50px;">${data.grNo}</span></p>
+        <p>Class: <span class="underline" style="min-width: 50px;">${data.class}</span> Division: <span class="underline" style="min-width: 50px;">${data.division}</span> Sports House: <span class="underline" style="min-width: 150px;">${data.house}</span></p>
+        <p>Date of Birth (As per school record): <span class="underline" style="min-width: 100px;">${data.dob}</span></p>
     `;
     const eventsHtml = `
-        <p class="mt-4">My ward will participate in the following events for the Annual Sports Meet</p>
-        <ol class="events-list list-decimal ml-4">
-            ${data.events.map(event => `<li>${event}</li>`).join('')}
-            ${numEvents === 0 ? '<li></li>' : ''} <!-- Add one blank line if no events selected -->
+        <p>My ward will participate in the following events for the Annual Sports Meet</p>
+        <ol class="list-decimal ml-4">
+            ${data.events.map((event, index) => `<li>${event}</li>`).join('')}
+            ${Array(Math.max(0, 3 - numEvents)).map(() => '<li></li>').join('')}
         </ol>
     `;
     const signatureHtml = `
-        <p class="mt-4">Parent signature <span class="underline"></span></p>
+        <p>Parents signature <span class="underline" style="min-width: 200px;"></span></p>
     `;
     summaryTitle.textContent = '';
     summaryDetails.innerHTML = headerHtml + greetingsHtml + noteHtml + studentDetailsHtml + eventsHtml + signatureHtml;
