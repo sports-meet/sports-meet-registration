@@ -861,84 +861,59 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; }
     }
 
     function renderSummary(data) {
-        if (!data) return;
-        const headerHtml = `
-            <header class="text-center mb-6">
-                <h1 class="text-xl font-extrabold text-gray-900 leading-tight mb-1">SUNRISE ENGLISH PRIVATE SCHOOL - L.L.C - O.P.C - ABU DHABI</h1>
-                <h2 class="text-lg font-bold text-gray-800">ANNUAL SPORTS MEET 2025-2026</h2>
-            </header>
-        `;
-        const line = (label, value) => `
-            <p class="text-md flex items-end mb-3">
-                <span class="whitespace-nowrap">${label}:</span>
-                <span class="font-bold flex-grow min-w-[50px] border-b border-gray-900 ml-2 text-blue-700">${value}</span>
-            </p>
-        `;
-        const introHtml = `
-            <div class="text-left space-y-3 mt-4 text-gray-800">
-                <p class="font-bold">Dear Parents,</p>
-                <p>Greetings!</p>
-                <p>We are pleased to inform you that the Annual Sports Meet for Boys and Girls will be held on the following dates:</p>
-                <ul class="list-disc list-inside ml-4 font-semibold text-red-700">
-                    <li>26th & 27th November 2025 (Wednesday & Thursday)</li>
-                    <li>8th December 2025 (Monday)</li>
-                </ul>
+    if (!data) return;
+    const maxEvents = 3; // Fixed to 3 lines as per the attached PDF (empty if fewer selected)
+    const headerHtml = `
+        <header class="mb-6 flex items-center">
+            <img src="https://schoolfinder.ae/wp-content/uploads/2022/05/10292.jpeg" alt="Sunrise English Private School Logo" style="width: 80px; height: auto; margin-right: 10px;">
+            <div>
+                <h1 class="text-xl font-extrabold text-gray-900 leading-tight">SUNRISE ENGLISH PRIVATE SCHOOL, L.L.C, O.P.C, Mussafah, Abu Dhabi</h1>
+                <p class="text-sm text-gray-600">(Recognized by ADEK, UAE & Affiliated (No 6630033) to CBSE, New Delhi)</p>
             </div>
-            <div class="mt-8">
-        `;
-        const studentDetailsHtml = `
-            <div class="print-info-section" style="font-size: 1rem; line-height: 1.5;">
-    FULL NAME OF STUDENT: <span style="text-decoration: underline;">${data.name}</span> &nbsp;&nbsp;&nbsp;
-    CLASS: <span style="text-decoration: underline;">${data.class}</span> &nbsp;&nbsp;&nbsp;
-    DIVISION: <span style="text-decoration: underline;">${data.division}</span> &nbsp;&nbsp;&nbsp;
-    GENDER: <span style="text-decoration: underline;">${data.gender}</span> &nbsp;&nbsp;&nbsp;
-    D.O.B: <span style="text-decoration: underline;">${data.dob}</span> &nbsp;&nbsp;&nbsp;
-    GR NO: <span style="text-decoration: underline;">${data.grNo}</span> &nbsp;&nbsp;&nbsp;
-    SPORTS HOUSE: <span style="text-decoration: underline;">${data.house}</span> &nbsp;&nbsp;&nbsp;
-    CATEGORY: <span style="text-decoration: underline;">${data.category}</span>
-</div>
-`;
-
-        const noteHtml = `
-            <div class="mt-8 border-t border-gray-300 pt-4">
-                <p class="font-bold text-lg mb-2 text-gray-900">Please Note:</p>
-                <ul class="list-disc list-inside ml-4 text-sm space-y-1 text-gray-700">
-                    <li>House-wise relay (4x100) for inter, senior, and super senior categories only.</li>
-                    <li>Track event selection: Athletes will be selected based on their timing performance.</li>
-                    <li>A time trial will be conducted.</li>
-                    <li>The top 8 athletes with the best times will qualify for the finals.</li>
-                    <li><span class="font-bold text-red-700">Entry Submission:</span> All entries must be submitted on or before 24th October 2025.</li>
-                </ul>
-            </div>
-        `;
-        const eventsHtml = `
-            <div class="mt-8 border-t border-gray-300 pt-4">
-                <p class="font-bold text-lg mb-2 text-gray-900">My ward will participate in the following events:</p>
-                <div class="events-list-grid">
-                    ${data.events.map((e, i) => `
-                        <div class="text-sm font-semibold text-gray-700">Event ${i + 1}: <span class="text-green-700">${e}</span></div>
-                    `).join('')}
-                    ${data.events.length < 3 ? new Array(3 - data.events.length).fill(0).map((_, i) => `
-                        <div class="text-sm font-semibold text-gray-700">Event ${data.events.length + i + 1}: <span class="text-green-700">&nbsp;</span></div>
-                    `).join('') : ''}
-                </div>
-            </div>
-        `;
-        const signatureHtml = `
-            <div class="mt-12 pt-4 border-t border-gray-300 text-md font-medium space-y-8">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-700 whitespace-nowrap">Allow / Don’t Allow:</span>
-                    <span class="print-signature-line"></span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-700 whitespace-nowrap">Parent/Guardian Signature:</span>
-                    <span class="print-signature-line"></span>
-                </div>
-            </div>
-        `;
-        summaryTitle.textContent = '';
-        summaryDetails.innerHTML = headerHtml + studentDetailsHtml + introHtml + eventsHtml + noteHtml + signatureHtml;
-    }
+        </header>
+    `;
+    const greetingsHtml = `
+        <p>Greetings!</p>
+        <p>We are pleased to inform you that the Annual Sports Meet for Boys and Girls will be held on the following dates:</p>
+        <ul class="list-disc ml-6">
+            <li>26th & 27th November 2025 (Wednesday & Thursday)</li>
+            <li>8th December 2025 (Monday)</li>
+        </ul>
+        <p>Kindly fill in the details of your ward in the form provided below. Your cooperation and support are highly appreciated to make this event a great success.</p>
+    `;
+    const noteHtml = `
+        <p><strong>Please Note:</strong></p>
+        <ul class="list-disc ml-6">
+            <li>House-wise Relay (4x100 meters): This event will be held for Inter, Senior, and Super Senior categories only.</li>
+            <li>Track Event Selection: Athletes will be selected based on their timing performance.</li>
+            <li>Selection Process for Track Events:</li>
+            <ul class="list-circle ml-6">
+                <li>A time trial will be conducted.</li>
+                <li>The top 8 athletes with the best times will qualify for the finals.</li>
+            </ul>
+            <li>Selection for Long Jump and Shot Put: Based on the distance achieved by the athletes.</li>
+            <li>Entry Submission: All entries must be submitted on or before 24th October 2025</li>
+        </ul>
+        <p class="text-left mt-4"><strong>PRINCIPAL.</strong></p>
+    `;
+    const studentDetailsHtml = `
+        <p>Full name of the student: <span class="underline">${data.name}</span> GR NO: <span class="underline underline-short">${data.grNo}</span></p>
+        <p>Class: <span class="underline underline-short">${data.class}</span> Division: <span class="underline underline-short">${data.division}</span> Sports House: <span class="underline underline-medium">${data.house}</span></p>
+        <p>Date of Birth (As per school record): <span class="underline underline-medium">${data.dob}</span></p>
+    `;
+    const eventsHtml = `
+        <p class="mt-8">My ward will participate in the following events for the Annual Sports Meet</p>
+        <ol class="events-list list-decimal ml-6">
+            ${data.events.map(event => `<li>${event}</li>`).join('')}
+            ${Array.from({ length: maxEvents - data.events.length }).map(() => `<li></li>`).join('')}
+        </ol>
+    `;
+    const signatureHtml = `
+        <p class="mt-8">Parents signature <span class="underline"></span></p>
+    `;
+    summaryTitle.textContent = '';
+    summaryDetails.innerHTML = headerHtml + greetingsHtml + noteHtml + studentDetailsHtml + eventsHtml + signatureHtml;
+}
 
     function downloadXLSX(data, filename = "sports_registrations_filtered.xlsx") {
         if (data.length === 0) {
