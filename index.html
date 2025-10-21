@@ -607,48 +607,57 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
     const TIME_LIMIT_MINUTES = 10; // 👈 You can change the time limit here!
     let timeRemaining = TIME_LIMIT_MINUTES * 60; // seconds
 
+// --- START OF DEADLINE TIMER CODE (Counting down to Oct 31) ---
+
+    // Set the deadline to October 31st, 2025 at midnight (23:59:59)
+    // NOTE: This uses the current time zone of the user's browser for the deadline calculation.
+    const REGISTRATION_DEADLINE = new Date("October 31, 2025 23:59:59").getTime(); 
+    
     // 1. Create a display element and append it to the body (outside the main card)
     const timerDisplay = document.createElement('div');
     timerDisplay.id = 'timerDisplay';
     timerDisplay.className = 'fixed top-0 left-1/2 transform -translate-x-1/2 mt-3 p-2 px-4 bg-yellow-400 text-gray-900 font-bold rounded-lg shadow-xl z-50 transition-all duration-300';
     document.body.appendChild(timerDisplay);
 
-    function formatTime(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    function formatTime(diff) {
+        // Calculate days, hours, minutes and seconds
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        return `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
     }
 
     function updateTimer() {
-        if (timeRemaining <= 0) {
+        const now = new Date().getTime();
+        const distance = REGISTRATION_DEADLINE - now;
+
+        if (distance < 0) {
             clearInterval(timerInterval);
-            timerDisplay.textContent = "TIME UP! Registration closed.";
+            timerDisplay.textContent = "REGISTRATION CLOSED!";
             timerDisplay.classList.remove('bg-yellow-400', 'text-gray-900', 'bg-red-500', 'text-white');
             timerDisplay.classList.add('bg-red-600', 'text-white', 'animate-shake');
             
             // Disable the entire form
             sportsForm.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
-            
-            // Assuming showMessageBox is defined (it is in your code)
-            showMessageBox("Time has expired. Please refresh to try again.", 'error');
+            showMessageBox("The registration deadline has passed.", 'error');
             return;
         }
 
-        if (timeRemaining <= 60 && timeRemaining > 0) {
-            // Highlight red when 60 seconds remain
+        // Less than 24 hours remaining (1000 * 60 * 60 * 24 milliseconds)
+        if (distance < 86400000) {
             timerDisplay.classList.remove('bg-yellow-400', 'text-gray-900');
             timerDisplay.classList.add('bg-red-500', 'text-white');
         }
 
-        timerDisplay.textContent = `Time Remaining: ${formatTime(timeRemaining)}`;
-        timeRemaining--;
+        timerDisplay.textContent = `Deadline: ${formatTime(distance)} Left`;
     }
 
-    // 2. Start the timer when the script runs
+    // 2. Start the timer when the script runs (runs every second)
     const timerInterval = setInterval(updateTimer, 1000);
     updateTimer(); // Initial call to display the timer immediately
-
-    // --- End of Timer Code ---
+    // --- END OF DEADLINE TIMER CODE ---
 
     function showMessageBox(message, type) {
         messageBox.textContent = message;
