@@ -789,36 +789,42 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
     }
 
     async function saveRegistration(data, docId = null) {
-        if (!isDatabaseReady) {
-            showMessageBox('Database is not initialized. Registration failed.', 'error');
-            return;
-        }
-        try {
-            if (docId) {
-                await setDoc(doc(db, COLLECTION_PATH, docId), data);
-                showMessageBox('Registration updated successfully!', 'success');
-            } else {
-                const normalizedName = data.name.toLowerCase().trim();
-                const existingGrNo = allRegistrations.find(reg => reg.grNo === data.grNo);
-                if (existingGrNo) {
-                    showMessageBox(`Error: The GR Number ${data.grNo} is already registered by ${existingGrNo.name}. Only one submission is allowed per student.`, 'error');
-                    return;
-                }
-                const existingName = allRegistrations.find(reg => reg.name.toLowerCase().trim() === normalizedName);
-                if (existingName) {
-                    showMessageBox(`Error: The name "${data.name}" is already registered. Only one submission is allowed per student.`, 'error');
-                    return;
-                }
-                await addDoc(collection(db, COLLECTION_PATH), data);
-                showMessageBox('Registration submitted successfully!', 'success');
-                lastSubmittedData = data;
-                toggleView('summary');
-            }
-        } catch (e) {
-            console.error("Error saving document: ", e);
-            showMessageBox('An error occurred during submission. Check console for details.', 'error');
-        }
+    if (!isDatabaseReady) {
+        showMessageBox('Database is not initialized. Registration failed.', 'error');
+        return;
     }
+    try {
+        if (docId) {
+            await setDoc(doc(db, COLLECTION_PATH, docId), data);
+            showMessageBox('Registration updated successfully!', 'success');
+        } else {
+            const normalizedName = data.name.toLowerCase().trim();
+            const existingGrNo = allRegistrations.find(reg => reg.grNo === data.grNo);
+            if (existingGrNo) {
+                showMessageBox(`Error: The GR Number ${data.grNo} is already registered by ${existingGrNo.name}. Only one submission is allowed per student.`, 'error');
+                return;
+            }
+            const existingName = allRegistrations.find(reg => reg.name.toLowerCase().trim() === normalizedName);
+            if (existingName) {
+                showMessageBox(`Error: The name "${data.name}" is already registered. Only one submission is allowed per student.`, 'error');
+                return;
+            }
+            await addDoc(collection(db, COLLECTION_PATH), data);
+            showMessageBox('Registration submitted successfully!', 'success');
+            lastSubmittedData = data;
+
+            // --- START: MODIFIED CODE FOR AUTO-DOWNLOAD ---
+            renderSummary(lastSubmittedData);         // 1. Render the data to the summary area
+            toggleView('summary');                    // 2. Show the summary view
+            await new Promise(r => setTimeout(r, 500)); // 3. Wait briefly for the browser to render
+            window.print();                           // 4. Trigger the Print/Save as PDF dialog
+            // --- END: MODIFIED CODE FOR AUTO-DOWNLOAD ---
+        }
+    } catch (e) {
+        console.error("Error saving document: ", e);
+        showMessageBox('An error occurred during submission. Check console for details.', 'error');
+    }
+}
 
     async function deleteRegistration(docId) {
         if (!isDatabaseReady) {
@@ -1013,7 +1019,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
             adminPanel.classList.add('hidden');
             adminBtn.classList.add('hidden');
             printArea.classList.remove('hidden');
-            renderSummary(lastSubmittedData);
         }
     }
 
