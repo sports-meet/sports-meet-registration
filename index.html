@@ -261,7 +261,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
 
 <div id="messageBox" class="fixed top-5 left-1/2 transform -translate-x-1/2 p-4 rounded-xl shadow-lg text-white font-semibold z-50 transition-all duration-300 hidden"></div>
 
-<div id="mainContainer" class="w-full max-w-6xl mx-auto flex items-start justify-center p-4 md:h-screen md:p-8">
+<div id="mainContainer" class="hidden w-full max-w-6xl mx-auto flex items-start justify-center p-4 md:h-screen md:p-8">
     <div id="registrationCard" class="app-card w-full max-w-4xl">
         <header class="text-center mb-10">
             <h1 class="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-red-500 via-blue-500 to-green-500">Sunrise Sports Meet</h1>
@@ -381,6 +381,17 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
             ← Back to Registration
         </button>
     </header>
+
+    <div class="flex space-x-4 mb-6">
+        <div class="p-4 bg-blue-100 rounded-xl flex-1 text-center border-2 border-blue-200">
+            <h3 class="text-lg font-semibold text-blue-800">Boys Registered</h3>
+            <p id="boyCount" class="text-4xl font-extrabold text-blue-900 mt-1">0</p>
+        </div>
+        <div class="p-4 bg-pink-100 rounded-xl flex-1 text-center border-2 border-pink-200">
+            <h3 class="text-lg font-semibold text-pink-800">Girls Registered</h3>
+            <p id="girlCount" class="text-4xl font-extrabold text-pink-900 mt-1">0</p>
+        </div>
+    </div>
 
     <div class="space-y-4 mb-6">
         <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
@@ -715,6 +726,26 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
         return "";
     }
 
+    function calculateGenderStats() {
+    let boyCount = 0;
+    let girlCount = 0;
+
+    // This iterates through your list of all registrations
+    for (const registration of allRegistrations) {
+        // ASSUMES the gender field is named 'gender' in your Firebase documents
+        const gender = registration.gender ? registration.gender.toLowerCase() : '';
+        if (gender === 'boy') {
+            boyCount++;
+        } else if (gender === 'girl') {
+            girlCount++;
+        }
+    }
+
+    // Updates the HTML elements you just added
+    document.getElementById('boyCount').textContent = boyCount;
+    document.getElementById('girlCount').textContent = girlCount;
+}
+
     function renderEvents(category, selectedEvents = []) {
         const categoryData = SPORTS_EVENTS[category];
         eventList.innerHTML = '';
@@ -983,44 +1014,49 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
     }
 
     function toggleView(view) {
+    mainContainer.classList.add('hidden');
+    adminPanel.classList.add('hidden');
+    printArea.classList.add('hidden');
+    adminBtn.classList.remove('hidden');
+    
+    // Admin Block (Removed 'calculateGenderStats()')
+    if (view === 'admin') {
+        adminPanel.classList.remove('hidden');
+        adminBtn.textContent = 'Back to Registration';
+        adminBtn.classList.replace('bg-red-500', 'bg-blue-500');
+        adminBtn.classList.replace('hover:bg-red-600', 'hover:bg-blue-600');
+        filterAdminData();
+        calculateGenderStats();
+    } else if (view === 'form') {
+        mainContainer.classList.remove('hidden');
+        adminBtn.textContent = 'Admin Panel';
+        adminBtn.classList.replace('bg-blue-500', 'bg-red-500');
+        adminBtn.classList.replace('hover:bg-blue-600', 'hover:bg-red-600');
+        const isEditing = sportsForm.querySelector('button[type="submit"]').dataset.editingId;
+        if (lastSubmittedData && !isEditing) {
+            sportsForm.classList.add('hidden');
+            submissionCompleteMessage.classList.remove('hidden');
+        } else {
+            sportsForm.classList.remove('hidden');
+            submissionCompleteMessage.classList.add('hidden');
+            sportsForm.reset();
+            categoryInput.value = '';
+            eventsSection.classList.add('hidden');
+            const submitBtn = sportsForm.querySelector('button[type="submit"]');
+            submitBtn.textContent = 'Submit Registration';
+            delete submitBtn.dataset.editingId;
+            if (!isDatabaseReady) submitBtn.disabled = true;
+            else submitBtn.disabled = false;
+        }
+    // Summary Block (Re-added 'renderSummary(lastSubmittedData);')
+    } else if (view === 'summary') {
         mainContainer.classList.add('hidden');
         adminPanel.classList.add('hidden');
-        printArea.classList.add('hidden');
-        adminBtn.classList.remove('hidden');
-        if (view === 'admin') {
-            adminPanel.classList.remove('hidden');
-            adminBtn.textContent = 'Back to Registration';
-            adminBtn.classList.replace('bg-red-500', 'bg-blue-500');
-            adminBtn.classList.replace('hover:bg-red-600', 'hover:bg-blue-600');
-            filterAdminData();
-        } else if (view === 'form') {
-            mainContainer.classList.remove('hidden');
-            adminBtn.textContent = 'Admin Panel';
-            adminBtn.classList.replace('bg-blue-500', 'bg-red-500');
-            adminBtn.classList.replace('hover:bg-blue-600', 'hover:bg-red-600');
-            const isEditing = sportsForm.querySelector('button[type="submit"]').dataset.editingId;
-            if (lastSubmittedData && !isEditing) {
-                sportsForm.classList.add('hidden');
-                submissionCompleteMessage.classList.remove('hidden');
-            } else {
-                sportsForm.classList.remove('hidden');
-                submissionCompleteMessage.classList.add('hidden');
-                sportsForm.reset();
-                categoryInput.value = '';
-                eventsSection.classList.add('hidden');
-                const submitBtn = sportsForm.querySelector('button[type="submit"]');
-                submitBtn.textContent = 'Submit Registration';
-                delete submitBtn.dataset.editingId;
-                if (!isDatabaseReady) submitBtn.disabled = true;
-                else submitBtn.disabled = false;
-            }
-        } else if (view === 'summary') {
-            mainContainer.classList.add('hidden');
-            adminPanel.classList.add('hidden');
-            adminBtn.classList.add('hidden');
-            printArea.classList.remove('hidden');
-        }
+        adminBtn.classList.add('hidden');
+        printArea.classList.remove('hidden');
+        renderSummary(lastSubmittedData); // <-- RE-ADDED LINE
     }
+}
 
     function renderSummary(data) {
     if (!data) return;
