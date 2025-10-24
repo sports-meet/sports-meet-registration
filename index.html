@@ -1371,8 +1371,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
             const dob = dobInput.value;
             const category = categoryInput.value;
             const selectedEvents = Array.from(eventList.querySelectorAll('.event-checkbox:checked')).map(cb => cb.value);
-            if (grNo.length !== 5 || !/^\d{5}$/.test(grNo)) {
-                showMessageBox('GR Number must be exactly 5 digits.', 'error');
+            if (!/^\d{3,5}$/.test(grNo)) {
+                showMessageBox('GR Number must be exactly 3-5 digits.', 'error');
                 return;
             }
             if (!category || category === 'ineligible') {
