@@ -354,9 +354,24 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
             </div>
 
             <button type="submit" class="submit-input mt-10 w-full" data-editing-id="">Submit Registration</button>
+            <!-- Forgot to Download? (Inside form, under Submit) -->
+<div id="pdfDownloadSection" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-center" style="display: none;">
+    <p class="text-sm font-medium text-blue-800 mb-2">Forgot to download your form?</p>
+    <div class="flex gap-2 max-w-xs mx-auto">
+        <input type="text" id="lookupGrNo" maxlength="5" 
+               class="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+               placeholder="GR No">
+        <button id="downloadByGrBtn" 
+                class="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition">
+            Download
+        </button>
+    </div>
+</div>
         </form>
     </div>
 </div>
+
+
 
 <div id="printArea" class="hidden w-full max-w-6xl mx-auto flex items-start justify-center p-4 md:p-8">
     <div class="app-card w-full max-w-4xl space-y-8">
@@ -1595,6 +1610,54 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
 
         toggleView('form');
     };
+
+// --- "Forgot to Download?" (Always Visible) ---
+const grInput = document.getElementById('lookupGrNo');
+const downloadBtn = document.getElementById('downloadByGrBtn');
+
+downloadBtn.addEventListener('click', () => {
+    const gr = grInput.value.trim();
+    if (!gr || !/^\d{3,5}$/.test(gr)) {
+        showMessageBox('Enter valid GR No (3-5 digits)', 'error');
+        return;
+    }
+    const reg = allRegistrations.find(r => r.grNo === gr);
+    if (!reg) {
+        showMessageBox('Not found: ' + gr, 'error');
+        return;
+    }
+    lastSubmittedData = reg;
+    renderSummary(reg);
+    toggleView('summary');
+    setTimeout(() => window.print(), 600);
+});
+
+// Enable when data loads
+onSnapshot(collection(db, COLLECTION_PATH), () => {
+    // Ready to search
+});
+
+// Show download box ONLY when on registration form
+function updateDownloadBoxVisibility() {
+    const isOnForm = !mainContainer.classList.contains('hidden') && 
+                     !submissionCompleteMessage.classList.contains('hidden') === false;
+    const downloadBox = document.getElementById('pdfDownloadSection');
+    if (isOnForm) {
+        downloadBox.style.display = 'block';
+    } else {
+        downloadBox.style.display = 'none';
+    }
+}
+
+// Call it whenever view changes
+const originalToggleView = toggleView;
+toggleView = function(view) {
+    originalToggleView(view);
+    updateDownloadBoxVisibility();
+};
+
+// Also call on page load
+updateDownloadBoxVisibility();
 </script>
 </body>
 </html>
