@@ -845,6 +845,7 @@ updateTimer(); // Run once immediately
         showMessageBox('Database is not initialized. Registration failed.', 'error');
         return;
     }
+
     try {
         if (docId) {
             await setDoc(doc(db, COLLECTION_PATH, docId), data);
@@ -861,22 +862,47 @@ updateTimer(); // Run once immediately
                 showMessageBox(`Error: The name "${data.name}" is already registered. Only one submission is allowed per student.`, 'error');
                 return;
             }
+
             await addDoc(collection(db, COLLECTION_PATH), data);
             showMessageBox('Registration submitted successfully!', 'success');
             lastSubmittedData = data;
 
-            // --- START: MODIFIED CODE FOR AUTO-DOWNLOAD ---
-            renderSummary(lastSubmittedData);         // 1. Render the data to the summary area
-            toggleView('summary');                    // 2. Show the summary view
-            await new Promise(r => setTimeout(r, 500)); // 3. Wait briefly for the browser to render
-            window.print();                           // 4. Trigger the Print/Save as PDF dialog
-            // --- END: MODIFIED CODE FOR AUTO-DOWNLOAD ---
+            // --- START: FIXED AUTO-DOWNLOAD CODE (works on iPhone too) ---
+            renderSummary(lastSubmittedData);        // 1. Render the summary
+            toggleView('summary');                   // 2. Show summary section
+            await new Promise(r => setTimeout(r, 500)); // 3. Wait a moment for UI to render
+
+            const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+            if (isIOS) {
+                // ✅ For iPhone/iPad – open summary in new tab
+                const summaryHtml = document.querySelector('#summarySection').outerHTML;
+                const newTab = window.open('', '_blank');
+                newTab.document.write(`
+                    <html>
+                        <head>
+                            <title>Registration Summary</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; padding: 16px; }
+                            </style>
+                        </head>
+                        <body>${summaryHtml}</body>
+                    </html>
+                `);
+                newTab.document.close();
+                showMessageBox('Your summary opened in a new tab — use Share → Save to Files to save it as PDF.', 'info');
+            } else {
+                // ✅ For desktop / Android browsers – auto print
+                window.print();
+            }
+            // --- END: FIXED AUTO-DOWNLOAD CODE ---
         }
     } catch (e) {
         console.error("Error saving document: ", e);
         showMessageBox('An error occurred during submission. Check console for details.', 'error');
     }
 }
+
 
     async function deleteRegistration(docId) {
         if (!isDatabaseReady) {
