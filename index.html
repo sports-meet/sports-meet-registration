@@ -396,6 +396,9 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
             ← Back to Registration
         </button>
     </header>
+    <button id="toggleRegistrationBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md mb-4">
+        Close Registration
+    </button>
 
     <div class="flex space-x-4 mb-6">
         <div class="p-4 bg-blue-100 rounded-xl flex-1 text-center border-2 border-blue-200">
@@ -623,11 +626,14 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
     const resultSaveBtn = document.getElementById('resultSaveBtn');
     const manageResultsBtn = document.getElementById('manageResultsBtn');
     const downloadResultsBtn = document.getElementById('downloadResultsBtn');
+    const toggleBtn = document.getElementById('toggleRegistrationBtn');
+    const submitBtn = sportsForm.querySelector('button[type="submit"]');
 
     let allRegistrations = [];
     let filteredRegistrations = [];
     let allResults = [];
     let lastSubmittedData = null;
+    let registrationOpen = true;
 
     // --- Timer Variables and Logic ---
     const TIME_LIMIT_MINUTES = 10; // 👈 You can change the time limit here!
@@ -643,6 +649,20 @@ const timerDisplay = document.createElement('div');
 timerDisplay.id = 'timerDisplay';
 timerDisplay.className = 'fixed top-0 left-1/2 transform -translate-x-1/2 mt-3 p-2 px-4 bg-yellow-400 text-gray-900 font-bold rounded-lg shadow-xl z-50 transition-all duration-300';
 document.body.appendChild(timerDisplay);
+
+toggleBtn.addEventListener('click', () => {
+    if (registrationOpen) {
+        registrationOpen = false;
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Registration Closed';
+        toggleBtn.innerText = 'Open Registration';
+    } else {
+        registrationOpen = true;
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Submit';
+        toggleBtn.innerText = 'Close Registration';
+    }
+});
 
 function formatTime(diff) {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
