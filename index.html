@@ -1197,62 +1197,64 @@ updateTimer(); // Run once immediately
         event: document.getElementById('filterEvent')?.value || ""
     };
 
-    // ✅ Build filter line dynamically
+    // ✅ Build header text dynamically (only show what is filtered)
     let filterLine = [];
     if (filters.event) filterLine.push(`Event: ${filters.event}`);
-    if (filters.class && filters.division) filterLine.push(`Class: ${filters.class} ${filters.division}`);
-    else if (filters.class) filterLine.push(`Class: ${filters.class}`);
+    if (filters.class) filterLine.push(`Class: ${filters.class} ${filters.division || ""}`.trim());
     if (filters.gender) filterLine.push(`Gender: ${filters.gender}`);
     if (filterLine.length === 0) filterLine.push("All Registrations");
 
-    // ✅ Build table headers (no Category)
-    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Events"];
+    // ✅ Build table headers including Result column
+    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Events", "Result"];
     const worksheetData = [];
 
-    // ✅ Top heading and filter line
-    worksheetData.push(["SUNRISE ENGLISH PRIVATE SCHOOL, L.L.C, O.P.C, Mussafah, Abudhabi"]);
+    // School heading in one line
+    worksheetData.push(["Sunrise English Private School, L.L.C, O.P.C, Mussafah, Abu Dhabi"]);
     worksheetData.push([filterLine.join(" | ")]);
-    worksheetData.push([]); // empty row for spacing
+    worksheetData.push([]); // empty row
     worksheetData.push(headers);
 
-    // ✅ Populate student data
+    // ✅ Add student rows
     data.forEach((reg, i) => {
-        // Format DOB as dd/mm/yyyy
-        let dobFormatted = "";
-        if (reg.dob) {
-            const d = new Date(reg.dob);
-            dobFormatted = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-        }
+        // Only include student if matches filters
+        if ((filters.class && reg.class !== filters.class) ||
+            (filters.division && reg.division !== filters.division) ||
+            (filters.gender && reg.gender !== filters.gender) ||
+            (filters.event && !reg.events.includes(filters.event))) return;
 
         worksheetData.push([
             i + 1,
             reg.grNo,
             reg.name,
-            `${reg.class}${reg.division || ""}`, // Class & Division
+            `${reg.class}-${reg.division}`,
             reg.house,
-            dobFormatted,
-            reg.events.join(', ')
+            reg.dob,
+            reg.events.join(", "),
+            "" // Result column empty for admin to fill
         ]);
     });
 
     const sheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
-    // ✅ Merge first row (heading) across all columns
-    sheet['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
-    ];
+    // Merge the first row (school heading) across all columns
+    sheet['!merges'] = [{
+        s: { r: 0, c: 0 },
+        e: { r: 0, c: headers.length - 1 }
+    }];
 
-    // Center heading
-    const cell = sheet["A1"];
-    if (cell) {
-        cell.s = {
-            alignment: { horizontal: "center", vertical: "center" },
-            font: { bold: true, sz: 14 }
-        };
-    }
+    // Center the school heading
+    ["A1"].forEach(cellAddress => {
+        const cell = sheet[cellAddress];
+        if (cell) {
+            cell.s = {
+                alignment: { horizontal: "center", vertical: "center" },
+                font: { bold: true, sz: 14 }
+            };
+        }
+    });
 
-    // Auto-fit columns
-    const colWidths = headers.map((_, colIndex) => {
+    // Auto-fit columns based on content
+    const colWidths = worksheetData[3].map((_, colIndex) => {
         let maxLength = 10;
         worksheetData.forEach(row => {
             if (row[colIndex]) {
@@ -1266,110 +1268,7 @@ updateTimer(); // Run once immediately
 
     XLSX.utils.book_append_sheet(workbook, sheet, "Registrations");
     XLSX.writeFile(workbook, filename);
-    showMessageBox(`Downloaded ${data.length} filtered registrations.`, 'success');
-}
-
-
-function downloadResultsXLSX() {
-    if (allResults.length === 0) {
-        showMessageBox('No results to download.', 'error');
-        return;
-    }
-
-    const workbook = XLSX.utils.book_new();
-
-    const filters = {
-        class: document.getElementById('resultClassFilter')?.value || "",
-        division: document.getElementById('resultDivisionFilter')?.value || "",
-        gender: document.getElementById('resultGenderFilter')?.value || "",
-        event: document.getElementById('resultEventFilter')?.value || ""
-    };
-
-    let filterLine = [];
-    if (filters.event) filterLine.push(`Event: ${filters.event}`);
-    if (filters.class && filters.division) filterLine.push(`Class: ${filters.class} ${filters.division}`);
-    else if (filters.class) filterLine.push(`Class: ${filters.class}`);
-    if (filters.gender) filterLine.push(`Gender: ${filters.gender}`);
-    if (filterLine.length === 0) filterLine.push("All Results");
-
-    allResults.forEach((res, index) => {
-        // Filter students based on selected filters
-        if ((filters.class && res.classVal !== filters.class) ||
-            (filters.division && res.division !== filters.division) ||
-            (filters.event && res.event.trim() !== filters.event.trim()) ||
-            (filters.gender && res.gender !== filters.gender)) return;
-
-        const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Result"];
-        const worksheetData = [];
-
-        // Top rows: School + Filter line + Headers
-        worksheetData.push(["SUNRISE ENGLISH PRIVATE SCHOOL, L.L.C, O.P.C, Mussafah, Abudhabi"]);
-        worksheetData.push([filterLine.join(" | ")]);
-        worksheetData.push([]); // spacing
-        worksheetData.push(headers);
-
-        const students = allRegistrations.filter(stu =>
-            stu.class === res.classVal &&
-            stu.division === res.division &&
-            stu.gender === res.gender &&
-            (!filters.event || stu.events.includes(filters.event))
-        );
-
-        students.forEach((stu, i) => {
-            const resultValue = filters.event ? "" : stu.events.join(", ");
-
-            // Format DOB
-            let dobFormatted = "";
-            if (stu.dob) {
-                const d = new Date(stu.dob);
-                dobFormatted = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-            }
-
-            worksheetData.push([
-                i + 1,
-                stu.grNo,
-                stu.name,
-                `${stu.class}${stu.division || ""}`,
-                stu.house,
-                dobFormatted,
-                resultValue
-            ]);
-        });
-
-        const sheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-        // Merge first row
-        sheet['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
-        ];
-
-        // Center heading
-        const cell = sheet["A1"];
-        if (cell) {
-            cell.s = {
-                alignment: { horizontal: "center", vertical: "center" },
-                font: { bold: true, sz: 14 }
-            };
-        }
-
-        // Auto-fit columns
-        const colWidths = headers.map((_, colIndex) => {
-            let maxLength = 10;
-            worksheetData.forEach(row => {
-                if (row[colIndex]) {
-                    const cellLength = row[colIndex].toString().length;
-                    if (cellLength > maxLength) maxLength = cellLength;
-                }
-            });
-            return { wch: maxLength + 2 };
-        });
-        sheet['!cols'] = colWidths;
-
-        XLSX.utils.book_append_sheet(workbook, sheet, `${res.event.slice(0, 25)}_${index + 1}`);
-    });
-
-    XLSX.writeFile(workbook, "sports_results_filtered.xlsx");
-    showMessageBox('Downloaded formatted results Excel successfully!', 'success');
+    showMessageBox(`Downloaded ${data.length} filtered registrations with Result column.`, 'success');
 }
 
 
