@@ -1829,7 +1829,7 @@ updateDownloadBoxVisibility();
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-// 🧩 Your Firebase config
+// 🔧 Your Firebase config
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_AUTH_DOMAIN",
@@ -1859,23 +1859,28 @@ async function checkRegistrationStatus() {
 
     if (isAdmin) {
       // Admin can always access
-      formSection.classList.remove("hidden");
-      closedMessage.classList.add("hidden");
+      const inputs = formSection.querySelectorAll("input, select, button[type='submit']");
+      inputs.forEach(el => el.disabled = false);   // enable all inputs
+      closedMessage.classList.add("hidden");       // hide closed message
       console.log("✅ Admin access granted");
     } else if (isOpen) {
       // Registration open for students
-      formSection.classList.remove("hidden");
-      closedMessage.classList.add("hidden");
+      const inputs = formSection.querySelectorAll("input, select, button[type='submit']");
+      inputs.forEach(el => el.disabled = false);   // enable all inputs
+      closedMessage.classList.add("hidden");       // hide closed message
     } else {
       // Registration closed for students
-      formSection.classList.add("hidden");
-      closedMessage.classList.remove("hidden");
+      const inputs = formSection.querySelectorAll("input, select, button[type='submit']");
+      inputs.forEach(el => el.disabled = true);    // disable all inputs
+      closedMessage.classList.remove("hidden");    // show closed message
     }
+
   } else {
     console.error("⚠️ Registration status not found in Firestore!");
   }
 }
 
+// ✅ Make sure this runs after DOM loads
 document.addEventListener("DOMContentLoaded", checkRegistrationStatus);
 </script>
 
