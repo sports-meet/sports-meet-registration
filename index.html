@@ -443,6 +443,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
                 <button id="downloadFinalistsCsvBtn" class="app-button app-button-blue text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Finalists XLSX</button>
                 <button id="downloadResultsBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Results XLSX</button>
                 <button id="clearFiltersBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Clear Filters</button>
+                <button id="clearAllBtn" class="app-button app-button-red mt-2">Clear All Registrations</button>
+
             </div>
         </div>
     </div>
@@ -666,6 +668,41 @@ toggleBtn.addEventListener('click', () => {
         submitBtn.disabled = false;
         submitBtn.innerText = 'Submit';
         toggleBtn.innerText = 'Close Registration';
+    }
+});
+
+const clearBtn = document.getElementById("clearAllBtn");
+
+clearBtn.addEventListener("click", async () => {
+    const adminKey = prompt("Enter admin key to clear all registrations:");
+    if (adminKey !== "sunrise2025") {
+        alert("❌ Wrong admin key. Access denied.");
+        return;
+    }
+
+    const confirmClear = confirm("⚠️ This will permanently delete ALL registrations. Are you sure?");
+    if (!confirmClear) return;
+
+    try {
+        const colRef = collection(db, "registrations");
+        const snapshot = await getDocs(colRef);
+
+        const deletePromises = [];
+        snapshot.forEach(docSnap => {
+            deletePromises.push(deleteDoc(doc(db, "registrations", docSnap.id)));
+        });
+
+        await Promise.all(deletePromises);
+        showMessageBox("✅ All registrations cleared successfully!", "success");
+
+        // Clear local arrays too
+        allRegistrations = [];
+        filteredRegistrations = [];
+        allResults = [];
+
+    } catch (err) {
+        console.error(err);
+        showMessageBox("❌ Failed to clear registrations. See console.", "error");
     }
 });
 
