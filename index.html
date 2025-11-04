@@ -1191,49 +1191,78 @@ updateTimer(); // Run once immediately
 
     // ✅ Get filters
     const filters = {
-        category: document.getElementById('filterCategory').value || "",
-        class: document.getElementById('filterClass').value || "",
-        division: document.getElementById('filterDivision').value || "",
-        gender: document.getElementById('filterGender').value || "",
-        event: document.getElementById('filterEvent').value || ""
+        class: document.getElementById('filterClass')?.value || "",
+        division: document.getElementById('filterDivision')?.value || "",
+        gender: document.getElementById('filterGender')?.value || "",
+        event: document.getElementById('filterEvent')?.value || ""
     };
 
-    // ✅ Build header text dynamically
+    // ✅ Build filter line dynamically
     let filterLine = [];
     if (filters.event) filterLine.push(`Event: ${filters.event}`);
-    if (filters.category) filterLine.push(`Category: ${filters.category}`);
-    if (filters.class) filterLine.push(`Class: ${filters.class} ${filters.division || ""}`.trim());
+    if (filters.class && filters.division) filterLine.push(`Class: ${filters.class} ${filters.division}`);
+    else if (filters.class) filterLine.push(`Class: ${filters.class}`);
     if (filters.gender) filterLine.push(`Gender: ${filters.gender}`);
     if (filterLine.length === 0) filterLine.push("All Registrations");
 
-    // ✅ Build table
-    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Category", "Events"];
+    // ✅ Build table headers (no Category)
+    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Events"];
     const worksheetData = [];
 
-    worksheetData.push(["Sunrise English Private School, Abu Dhabi"]);
+    // ✅ Top heading and filter line
+    worksheetData.push(["SUNRISE ENGLISH PRIVATE SCHOOL, L.L.C, O.P.C, Mussafah, Abudhabi"]);
     worksheetData.push([filterLine.join(" | ")]);
-    worksheetData.push([]);
+    worksheetData.push([]); // empty row for spacing
     worksheetData.push(headers);
 
+    // ✅ Populate student data
     data.forEach((reg, i) => {
+        // Format DOB as dd/mm/yyyy
+        let dobFormatted = "";
+        if (reg.dob) {
+            const d = new Date(reg.dob);
+            dobFormatted = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+        }
+
         worksheetData.push([
             i + 1,
             reg.grNo,
             reg.name,
-            `${reg.class}-${reg.division}`,
+            `${reg.class}${reg.division || ""}`, // Class & Division
             reg.house,
-            reg.dob,
-            reg.category,
+            dobFormatted,
             reg.events.join(', ')
         ]);
     });
 
     const sheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
-    sheet['!merges'] = [{
-        s: { r: 0, c: 0 },
-        e: { r: 0, c: headers.length - 1 }
-    }];
+    // ✅ Merge first row (heading) across all columns
+    sheet['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
+    ];
+
+    // Center heading
+    const cell = sheet["A1"];
+    if (cell) {
+        cell.s = {
+            alignment: { horizontal: "center", vertical: "center" },
+            font: { bold: true, sz: 14 }
+        };
+    }
+
+    // Auto-fit columns
+    const colWidths = headers.map((_, colIndex) => {
+        let maxLength = 10;
+        worksheetData.forEach(row => {
+            if (row[colIndex]) {
+                const cellLength = row[colIndex].toString().length;
+                if (cellLength > maxLength) maxLength = cellLength;
+            }
+        });
+        return { wch: maxLength + 2 };
+    });
+    sheet['!cols'] = colWidths;
 
     XLSX.utils.book_append_sheet(workbook, sheet, "Registrations");
     XLSX.writeFile(workbook, filename);
@@ -1241,7 +1270,7 @@ updateTimer(); // Run once immediately
 }
 
 
-    function downloadResultsXLSX() {
+function downloadResultsXLSX() {
     if (allResults.length === 0) {
         showMessageBox('No results to download.', 'error');
         return;
@@ -1250,22 +1279,21 @@ updateTimer(); // Run once immediately
     const workbook = XLSX.utils.book_new();
 
     const filters = {
-        category: document.getElementById('resultCategoryFilter')?.value || "",
-        class: document.getElementById('resultClassFilter').value || "",
-        division: document.getElementById('resultDivisionFilter').value || "",
-        gender: document.getElementById('resultGenderFilter').value || "",
-        event: document.getElementById('resultEventFilter').value || ""
+        class: document.getElementById('resultClassFilter')?.value || "",
+        division: document.getElementById('resultDivisionFilter')?.value || "",
+        gender: document.getElementById('resultGenderFilter')?.value || "",
+        event: document.getElementById('resultEventFilter')?.value || ""
     };
 
     let filterLine = [];
     if (filters.event) filterLine.push(`Event: ${filters.event}`);
-    if (filters.category) filterLine.push(`Category: ${filters.category}`);
-    if (filters.class) filterLine.push(`Class: ${filters.class} ${filters.division || ""}`.trim());
+    if (filters.class && filters.division) filterLine.push(`Class: ${filters.class} ${filters.division}`);
+    else if (filters.class) filterLine.push(`Class: ${filters.class}`);
     if (filters.gender) filterLine.push(`Gender: ${filters.gender}`);
     if (filterLine.length === 0) filterLine.push("All Results");
 
     allResults.forEach((res, index) => {
-        // EXACT match filtering: only include the selected event if chosen
+        // Filter students based on selected filters
         if ((filters.class && res.classVal !== filters.class) ||
             (filters.division && res.division !== filters.division) ||
             (filters.event && res.event.trim() !== filters.event.trim()) ||
@@ -1274,57 +1302,58 @@ updateTimer(); // Run once immediately
         const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Result"];
         const worksheetData = [];
 
-        // Top rows: School + Event title + Filter line + Headers
-        worksheetData.push(["Sunrise English Private School, Abu Dhabi"]);
-        worksheetData.push(["Annual Sports Meet 2025-26"]);
+        // Top rows: School + Filter line + Headers
+        worksheetData.push(["SUNRISE ENGLISH PRIVATE SCHOOL, L.L.C, O.P.C, Mussafah, Abudhabi"]);
         worksheetData.push([filterLine.join(" | ")]);
+        worksheetData.push([]); // spacing
         worksheetData.push(headers);
 
         const students = allRegistrations.filter(stu =>
             stu.class === res.classVal &&
             stu.division === res.division &&
             stu.gender === res.gender &&
-            (!filters.event || stu.events.includes(filters.event)) // only filter by event if selected
+            (!filters.event || stu.events.includes(filters.event))
         );
 
         students.forEach((stu, i) => {
-    // If an event is selected, make the Result column empty
-    const resultValue = filters.event ? "" : stu.events.join(", ");
+            const resultValue = filters.event ? "" : stu.events.join(", ");
 
-    worksheetData.push([
-        i + 1,
-        stu.grNo,
-        stu.name,
-        `${stu.class}-${stu.division}`,
-        stu.house,
-        stu.dob,
-        resultValue // empty if a filter event is chosen
-    ]);
-});
+            // Format DOB
+            let dobFormatted = "";
+            if (stu.dob) {
+                const d = new Date(stu.dob);
+                dobFormatted = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+            }
 
-
+            worksheetData.push([
+                i + 1,
+                stu.grNo,
+                stu.name,
+                `${stu.class}${stu.division || ""}`,
+                stu.house,
+                dobFormatted,
+                resultValue
+            ]);
+        });
 
         const sheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
-        // Merge first two rows across all columns
+        // Merge first row
         sheet['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }, // School name
-            { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } }  // Annual Sports Meet
+            { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
         ];
 
-        // Center the top two rows
-        ["A1", "A2"].forEach(cellAddress => {
-            const cell = sheet[cellAddress];
-            if (cell) {
-                cell.s = {
-                    alignment: { horizontal: "center", vertical: "center" },
-                    font: { bold: true, sz: 14 }
-                };
-            }
-        });
+        // Center heading
+        const cell = sheet["A1"];
+        if (cell) {
+            cell.s = {
+                alignment: { horizontal: "center", vertical: "center" },
+                font: { bold: true, sz: 14 }
+            };
+        }
 
-        // AUTO-FIT columns based on content length
-        const colWidths = worksheetData[3].map((_, colIndex) => {
+        // Auto-fit columns
+        const colWidths = headers.map((_, colIndex) => {
             let maxLength = 10;
             worksheetData.forEach(row => {
                 if (row[colIndex]) {
@@ -1342,6 +1371,7 @@ updateTimer(); // Run once immediately
     XLSX.writeFile(workbook, "sports_results_filtered.xlsx");
     showMessageBox('Downloaded formatted results Excel successfully!', 'success');
 }
+
 
 
 
