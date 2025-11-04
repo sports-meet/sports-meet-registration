@@ -1250,69 +1250,66 @@ updateTimer(); // Run once immediately
     const workbook = XLSX.utils.book_new();
 
     const filters = {
-        category: document.getElementById('resultCategoryFilter')?.value || "",
-        class: document.getElementById('resultClassFilter').value || "",
-        division: document.getElementById('resultDivisionFilter').value || "",
-        gender: document.getElementById('resultGenderFilter').value || "",
-        event: document.getElementById('resultEventFilter').value || ""
+        class: document.getElementById('resultClassFilter')?.value || "",
+        division: document.getElementById('resultDivisionFilter')?.value || "",
+        gender: document.getElementById('resultGenderFilter')?.value || "",
+        event: document.getElementById('resultEventFilter')?.value || ""
     };
 
+    // Build filter line dynamically
     let filterLine = [];
     if (filters.event) filterLine.push(`Event: ${filters.event}`);
-    if (filters.category) filterLine.push(`Category: ${filters.category}`);
     if (filters.class) filterLine.push(`Class: ${filters.class} ${filters.division || ""}`.trim());
     if (filters.gender) filterLine.push(`Gender: ${filters.gender}`);
     if (filterLine.length === 0) filterLine.push("All Results");
 
     allResults.forEach((res, index) => {
-        // EXACT match filtering: only include the selected event if chosen
+        // EXACT match filtering
         if ((filters.class && res.classVal !== filters.class) ||
             (filters.division && res.division !== filters.division) ||
             (filters.event && res.event.trim() !== filters.event.trim()) ||
             (filters.gender && res.gender !== filters.gender)) return;
 
-        const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Result"];
+        const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Events", "Results"];
         const worksheetData = [];
 
         // Top rows: School + Event title + Filter line + Headers
-        worksheetData.push(["Sunrise English Private School, Abu Dhabi"]);
+        worksheetData.push(["Sunrise English Private School, L.L.C, O.P.C, Mussafah, Abu Dhabi"]);
         worksheetData.push(["Annual Sports Meet 2025-26"]);
         worksheetData.push([filterLine.join(" | ")]);
         worksheetData.push(headers);
 
+        // Filter students
         const students = allRegistrations.filter(stu =>
             stu.class === res.classVal &&
             stu.division === res.division &&
             stu.gender === res.gender &&
-            (!filters.event || stu.events.includes(filters.event)) // only filter by event if selected
+            (!filters.event || stu.events.includes(filters.event))
         );
 
+        // Push student data
         students.forEach((stu, i) => {
-    // If an event is selected, make the Result column empty
-    const resultValue = filters.event ? "" : stu.events.join(", ");
-
-    worksheetData.push([
-        i + 1,
-        stu.grNo,
-        stu.name,
-        `${stu.class}-${stu.division}`,
-        stu.house,
-        stu.dob,
-        resultValue // empty if a filter event is chosen
-    ]);
-});
-
-
+            worksheetData.push([
+                i + 1,
+                stu.grNo,
+                stu.name,
+                `${stu.class}-${stu.division}`,
+                stu.house,
+                stu.dob,
+                stu.events.join(", "), // events
+                "" // Results column empty for admin to fill
+            ]);
+        });
 
         const sheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
-        // Merge first two rows across all columns
+        // Merge top rows
         sheet['!merges'] = [
             { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }, // School name
             { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } }  // Annual Sports Meet
         ];
 
-        // Center the top two rows
+        // Center the top rows
         ["A1", "A2"].forEach(cellAddress => {
             const cell = sheet[cellAddress];
             if (cell) {
@@ -1323,7 +1320,7 @@ updateTimer(); // Run once immediately
             }
         });
 
-        // AUTO-FIT columns based on content length
+        // Auto-fit columns
         const colWidths = worksheetData[3].map((_, colIndex) => {
             let maxLength = 10;
             worksheetData.forEach(row => {
@@ -1342,6 +1339,7 @@ updateTimer(); // Run once immediately
     XLSX.writeFile(workbook, "sports_results_filtered.xlsx");
     showMessageBox('Downloaded formatted results Excel successfully!', 'success');
 }
+
 
 
 
