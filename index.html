@@ -1191,26 +1191,32 @@ updateTimer(); // Run once immediately
 
     // ✅ Get filters
     const filters = {
-        category: document.getElementById('filterCategory').value || "",
-        class: document.getElementById('filterClass').value || "",
-        division: document.getElementById('filterDivision').value || "",
-        gender: document.getElementById('filterGender').value || "",
-        event: document.getElementById('filterEvent').value || ""
+        class: document.getElementById('filterClass')?.value || "",
+        division: document.getElementById('filterDivision')?.value || "",
+        gender: document.getElementById('filterGender')?.value || "",
+        event: document.getElementById('filterEvent')?.value || ""
     };
 
-    // ✅ Build header text dynamically
+    // ✅ Build filter line dynamically
     let filterLine = [];
     if (filters.event) filterLine.push(`Event: ${filters.event}`);
-    if (filters.category) filterLine.push(`Category: ${filters.category}`);
     if (filters.class) filterLine.push(`Class: ${filters.class} ${filters.division || ""}`.trim());
     if (filters.gender) filterLine.push(`Gender: ${filters.gender}`);
     if (filterLine.length === 0) filterLine.push("All Registrations");
 
-    // ✅ Build table
-    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Category", "Events"];
+    function formatDateDMY(dateStr) {
+        const d = new Date(dateStr);
+        if (isNaN(d)) return dateStr;
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+
+    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Events", "Results"];
     const worksheetData = [];
 
-    worksheetData.push(["Sunrise English Private School, Abu Dhabi"]);
+    worksheetData.push(["Sunrise English Private School, L.L.C, O.P.C, Mussafah, Abu Dhabi"]);
     worksheetData.push([filterLine.join(" | ")]);
     worksheetData.push([]);
     worksheetData.push(headers);
@@ -1222,23 +1228,46 @@ updateTimer(); // Run once immediately
             reg.name,
             `${reg.class}-${reg.division}`,
             reg.house,
-            reg.dob,
-            reg.category,
-            reg.events.join(', ')
+            formatDateDMY(reg.dob),
+            reg.events.join(", "),
+            "" // Results column empty for admin to fill
         ]);
     });
 
     const sheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
-    sheet['!merges'] = [{
-        s: { r: 0, c: 0 },
-        e: { r: 0, c: headers.length - 1 }
-    }];
+    // Merge first row (school name) across all columns
+    sheet['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
+    ];
+
+    // Center the school name
+    const cell = sheet["A1"];
+    if (cell) {
+        cell.s = {
+            alignment: { horizontal: "center", vertical: "center" },
+            font: { bold: true, sz: 14 }
+        };
+    }
+
+    // AUTO-FIT columns
+    const colWidths = worksheetData[3].map((_, colIndex) => {
+        let maxLength = 10;
+        worksheetData.forEach(row => {
+            if (row[colIndex]) {
+                const cellLength = row[colIndex].toString().length;
+                if (cellLength > maxLength) maxLength = cellLength;
+            }
+        });
+        return { wch: maxLength + 2 };
+    });
+    sheet['!cols'] = colWidths;
 
     XLSX.utils.book_append_sheet(workbook, sheet, "Registrations");
     XLSX.writeFile(workbook, filename);
-    showMessageBox(`Downloaded ${data.length} filtered registrations.`, 'success');
+    showMessageBox(`Downloaded ${data.length} registrations successfully!`, 'success');
 }
+
 
 
     function downloadResultsXLSX() {
