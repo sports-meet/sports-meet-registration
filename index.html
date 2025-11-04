@@ -278,6 +278,10 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
         </div>
 
         <form id="sportsForm" class="space-y-6">
+            <div id="registrationClosedMessage" class="hidden text-center p-8 border-4 border-dashed border-red-300 rounded-2xl bg-red-50 shadow-inner">
+  <h3 class="text-3xl font-extrabold text-red-700 mb-2">Registration Closed!</h3>
+  <p class="text-lg text-gray-700 mb-4">Student registrations are now closed. Please contact the Admin if changes are needed.</p>
+</div>
             <div>
                 <label for="name" class="block text-sm font-semibold text-gray-700">Full Name</label>
                 <input type="text" id="name" class="app-input" required>
@@ -353,8 +357,9 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
                 <p id="eventNote" class="text-sm text-gray-600 mt-4 font-medium"></p>
             </div>
 
-       
-            <!-- Forgot to Download? (Inside form, under Submit) -->
+            <button type="submit" class="submit-input mt-10 w-full" data-editing-id="">Submit Registration</button>
+            
+         <!-- Forgot to Download? (Inside form, under Submit) -->
 <div id="pdfDownloadSection" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-center" style="display: none;">
     <p class="text-sm font-medium text-blue-800 mb-2">Forgot to download your form?</p>
     <div class="flex gap-2 max-w-xs mx-auto">
@@ -1820,5 +1825,59 @@ toggleView = function(view) {
 // Also call on page load
 updateDownloadBoxVisibility();
 </script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+// 🧩 Your Firebase config
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function checkRegistrationStatus() {
+  // 🧠 Ask if user is admin (you can change this to a better system later)
+  const adminKey = prompt("Enter admin key (leave blank if you're a student):");
+  const isAdmin = adminKey === "sunrise2025"; // 🔑 change this password
+
+  const docRef = doc(db, "settings", "registration");
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    const isOpen = data.isOpen;
+
+    const formSection = document.getElementById("sportsForm");
+    const closedMessage = document.getElementById("registrationClosedMessage");
+
+    if (isAdmin) {
+      // Admin can always access
+      formSection.classList.remove("hidden");
+      closedMessage.classList.add("hidden");
+      console.log("✅ Admin access granted");
+    } else if (isOpen) {
+      // Registration open for students
+      formSection.classList.remove("hidden");
+      closedMessage.classList.add("hidden");
+    } else {
+      // Registration closed for students
+      formSection.classList.add("hidden");
+      closedMessage.classList.remove("hidden");
+    }
+  } else {
+    console.error("⚠️ Registration status not found in Firestore!");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", checkRegistrationStatus);
+</script>
+
 </body>
 </html>
