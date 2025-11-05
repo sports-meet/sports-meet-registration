@@ -670,14 +670,15 @@ toggleBtn.addEventListener('click', () => {
         toggleBtn.innerText = 'Open Registration';
     }
 
-    // ✅ Always keep "Download with Gr.No" button enabled
-    const downloadWithGrNoBtn = document.getElementById('downloadWithGrNoBtn');
-    if (downloadWithGrNoBtn) {
-        downloadWithGrNoBtn.disabled = false;
-        downloadWithGrNoBtn.style.pointerEvents = 'auto';
-        downloadWithGrNoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    // ✅ Always keep the "Download by GR No" button active for everyone
+    const downloadByGrBtn = document.getElementById('downloadByGrBtn');
+    if (downloadByGrBtn) {
+        downloadByGrBtn.disabled = false;
+        downloadByGrBtn.style.pointerEvents = 'auto';
+        downloadByGrBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 });
+
 
 
 
