@@ -739,9 +739,14 @@ function updateTimer() {
 
         // Disable the form if it exists
         const sportsForm = document.getElementById('sportsForm');
-        if (sportsForm) {
-            sportsForm.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+if (sportsForm) {
+    sportsForm.querySelectorAll('input, select, button').forEach(el => {
+        if (el.id !== 'lookupGrNo' && el.id !== 'downloadByGrBtn') { // exempt GR No & download button
+            el.disabled = true;
         }
+    });
+}
+
 
         if (typeof showMessageBox === "function") {
             showMessageBox("The registration deadline has passed.", 'error');
