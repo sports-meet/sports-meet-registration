@@ -658,21 +658,27 @@ timerDisplay.className = 'fixed top-0 left-1/2 transform -translate-x-1/2 mt-3 p
 document.body.appendChild(timerDisplay);
 
 toggleBtn.addEventListener('click', () => {
-  registrationOpen = !registrationOpen;
+    registrationOpen = !registrationOpen;
 
-  if (registrationOpen) {
-    submitBtn.disabled = false;
-    submitBtn.innerText = 'Submit';
-    toggleBtn.innerText = 'Close Registration';
-  } else {
-    submitBtn.disabled = true;
-    submitBtn.innerText = 'Registration Closed';
-    toggleBtn.innerText = 'Open Registration';
-  }
+    if (registrationOpen) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Submit';
+        toggleBtn.innerText = 'Close Registration';
+    } else {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Registration Closed';
+        toggleBtn.innerText = 'Open Registration';
+    }
 
-  // ✅ Always keep the "Download with Gr. No." button active
-  downloadWithGrNoBtn.disabled = false;
+    // ✅ Always keep "Download with Gr.No" button enabled
+    const downloadWithGrNoBtn = document.getElementById('downloadWithGrNoBtn');
+    if (downloadWithGrNoBtn) {
+        downloadWithGrNoBtn.disabled = false;
+        downloadWithGrNoBtn.style.pointerEvents = 'auto';
+        downloadWithGrNoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
 });
+
 
 
 const clearBtn = document.getElementById("clearAllBtn");
