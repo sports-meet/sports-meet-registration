@@ -358,21 +358,19 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
             </div>
 
             <button type="submit" class="submit-input mt-10 w-full" data-editing-id="">Submit Registration</button>
-            
-         <!-- Forgot to Download? (Inside form, under Submit) -->
-<div id="pdfDownloadSection" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-center">
-    <p class="text-sm font-medium text-blue-800 mb-2">Forgot to download your form?</p>
-    <div class="flex gap-2 max-w-xs mx-auto">
-        <input type="text" id="lookupGrNo" maxlength="5" 
-               class="allow-when-closed flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
-               placeholder="GR No">
-        <button id="downloadByGrBtn" type="button" 
-                class="allow-when-closed px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition">
-            Download
-        </button>
-    </div>
-</div>
 
+            <div id="pdfDownloadSection" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-center">
+                <p class="text-sm font-medium text-blue-800 mb-2">Forgot to download your form?</p>
+                <div class="flex gap-2 max-w-xs mx-auto">
+                    <input type="text" id="lookupGrNo" maxlength="5"
+                        class="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+                        placeholder="GR No">
+                    <button id="downloadByGrBtn" type="button"
+                        class="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition">
+                        Download
+                    </button>
+                </div>
+            </div>
 
         </form>
     </div>
