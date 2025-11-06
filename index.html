@@ -1963,7 +1963,6 @@ updateDownloadBoxVisibility();
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-// 🔧 Your Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyC-axJOwivMy-bGhNmVIHaXORcG90gLA9g",
   authDomain: "registration-c78dc.firebaseapp.com",
@@ -1977,34 +1976,44 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function checkRegistrationStatus() {
-  // Optional: Remove prompt() entirely if you want NO password check
-  const adminKey = prompt("Enter admin key (leave blank if student):") || "";
-  const isAdmin = adminKey === "sunrise2025"; // Change this password anytime
-
-  const formSection = document.getElementById("sportsForm");
-  const closedMessage = document.getElementById("registrationClosedMessage");
-  const pdfSection = document.getElementById("pdfDownloadSection");
+// FORCE ENABLE GR NO DOWNLOAD ON PAGE LOAD — BEFORE ANYTHING ELSE
+window.addEventListener("DOMContentLoaded", () => {
   const grInput = document.getElementById("lookupGrNo");
   const downloadBtn = document.getElementById("downloadByGrBtn");
+  const pdfSection = document.getElementById("pdfDownloadSection");
 
-  // FORCE ENABLE DOWNLOAD BY GR NO — FOR EVERYONE, ALWAYS!
   if (grInput) {
     grInput.disabled = false;
-    grInput.style.pointerEvents = "auto";
-    grInput.style.opacity = "1";
+    grInput.removeAttribute("disabled");
   }
   if (downloadBtn) {
     downloadBtn.disabled = false;
+    downloadBtn.removeAttribute("disabled");
     downloadBtn.style.pointerEvents = "auto";
-    downloadBtn.style.opacity = "1";
-    downloadBtn.classList.remove("opacity-50", "cursor-not-allowed");
   }
-  if (pdfSection) {
-    pdfSection.style.display = "block";
-    pdfSection.style.opacity = "1";
-    pdfSection.style.pointerEvents = "auto";
+  if (pdfSection) pdfSection.style.display = "block";
+});
+
+// Re-enable every 1 second (in case something disables it)
+setInterval(() => {
+  const grInput = document.getElementById("lookupGrNo");
+  const downloadBtn = document.getElementById("downloadByGrBtn");
+  if (grInput?.hasAttribute("disabled")) {
+    grInput.disabled = false;
+    grInput.removeAttribute("disabled");
   }
+  if (downloadBtn?.hasAttribute("disabled")) {
+    downloadBtn.disabled = false;
+    downloadBtn.removeAttribute("disabled");
+  }
+}, 1000);
+
+async function checkRegistrationStatus() {
+  const adminKey = prompt("Enter admin key (leave blank if student):") || "";
+  const isAdmin = adminKey === "sunrise2025";
+
+  const formSection = document.getElementById("sportsForm");
+  const closedMessage = document.getElementById("registrationClosedMessage");
 
   try {
     const docRef = doc(db, "settings", "registration");
@@ -2013,48 +2022,30 @@ async function checkRegistrationStatus() {
     if (docSnap.exists()) {
       const { isOpen } = docSnap.data();
 
-      if (isAdmin) {
-        // ADMIN: Full access
-        formSection.querySelectorAll("input, select, button").forEach(el => el.disabled = false);
-        closedMessage.classList.add("hidden");
-        console.log("Admin access granted");
-      }
-      else if (isOpen) {
-        // STUDENT: Registration OPEN → enable form
+      if (isAdmin || isOpen) {
+        // ENABLE FORM
         formSection.querySelectorAll("input, select, button").forEach(el => {
-          if (el.id !== "lookupGrNo" && el.id !== "downloadByGrBtn") {
+          if (!["lookupGrNo", "downloadByGrBtn"].includes(el.id)) {
             el.disabled = false;
           }
         });
         closedMessage.classList.add("hidden");
-      }
-      else {
-        // STUDENT: Registration CLOSED → disable only form, KEEP DOWNLOAD WORKING
+      } else {
+        // DISABLE ONLY REGISTRATION FIELDS
         formSection.querySelectorAll("input, select, button").forEach(el => {
-          if (el.id !== "lookupGrNo" && el.id !== "downloadByGrBtn") {
+          if (!["lookupGrNo", "downloadByGrBtn"].includes(el.id)) {
             el.disabled = true;
           }
         });
         closedMessage.classList.remove("hidden");
       }
-    } else {
-      console.warn("No registration status found. Assuming closed.");
-      closedMessage.classList.remove("hidden");
-      // Still keep download enabled
     }
-  } catch (error) {
-    console.error("Firestore error:", error);
-    showMessageBox("Failed to check registration status. Download still works.", "error");
+  } catch (err) {
+    console.error("Firestore error:", err);
   }
 }
 
-// Run on page load
-document.addEventListener("DOMContentLoaded", () => {
-  checkRegistrationStatus();
-  
-  // Re-run every 10 seconds in case status changes
-  setInterval(checkRegistrationStatus, 10000);
-});
+document.addEventListener("DOMContentLoaded", checkRegistrationStatus);
 </script>
 
 </body>
