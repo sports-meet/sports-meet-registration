@@ -672,11 +672,7 @@ toggleBtn.addEventListener('click', () => {
 
     // ✅ Always keep the "Download by GR No" button active for everyone
     const downloadByGrBtn = document.getElementById('downloadByGrBtn');
-    if (downloadByGrBtn) {
-        downloadByGrBtn.disabled = false;
-        downloadByGrBtn.style.pointerEvents = 'auto';
-        downloadByGrBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-    }
+    
 });
 
 
@@ -1982,45 +1978,83 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function checkRegistrationStatus() {
-  // 🧠 Ask if user is admin (you can change this to a better system later)
-  const adminKey = prompt("Enter admin key (leave blank if you're a student):");
-  const isAdmin = adminKey === "sunrise2025"; // 🔑 change this password
+  // Optional: Remove prompt() entirely if you want NO password check
+  const adminKey = prompt("Enter admin key (leave blank if student):") || "";
+  const isAdmin = adminKey === "sunrise2025"; // Change this password anytime
 
-  const docRef = doc(db, "settings", "registration");
-  const docSnap = await getDoc(docRef);
+  const formSection = document.getElementById("sportsForm");
+  const closedMessage = document.getElementById("registrationClosedMessage");
+  const pdfSection = document.getElementById("pdfDownloadSection");
+  const grInput = document.getElementById("lookupGrNo");
+  const downloadBtn = document.getElementById("downloadByGrBtn");
 
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    const isOpen = data.isOpen;
+  // FORCE ENABLE DOWNLOAD BY GR NO — FOR EVERYONE, ALWAYS!
+  if (grInput) {
+    grInput.disabled = false;
+    grInput.style.pointerEvents = "auto";
+    grInput.style.opacity = "1";
+  }
+  if (downloadBtn) {
+    downloadBtn.disabled = false;
+    downloadBtn.style.pointerEvents = "auto";
+    downloadBtn.style.opacity = "1";
+    downloadBtn.classList.remove("opacity-50", "cursor-not-allowed");
+  }
+  if (pdfSection) {
+    pdfSection.style.display = "block";
+    pdfSection.style.opacity = "1";
+    pdfSection.style.pointerEvents = "auto";
+  }
 
-    const formSection = document.getElementById("sportsForm");
-    const closedMessage = document.getElementById("registrationClosedMessage");
+  try {
+    const docRef = doc(db, "settings", "registration");
+    const docSnap = await getDoc(docRef);
 
-    if (isAdmin) {
-      // Admin can always access
-      const inputs = formSection.querySelectorAll("input, select, button[type='submit']");
-      inputs.forEach(el => el.disabled = false);   // enable all inputs
-      closedMessage.classList.add("hidden");       // hide closed message
-      console.log("✅ Admin access granted");
-    } else if (isOpen) {
-      // Registration open for students
-      const inputs = formSection.querySelectorAll("input, select, button[type='submit']");
-      inputs.forEach(el => el.disabled = false);   // enable all inputs
-      closedMessage.classList.add("hidden");       // hide closed message
+    if (docSnap.exists()) {
+      const { isOpen } = docSnap.data();
+
+      if (isAdmin) {
+        // ADMIN: Full access
+        formSection.querySelectorAll("input, select, button").forEach(el => el.disabled = false);
+        closedMessage.classList.add("hidden");
+        console.log("Admin access granted");
+      }
+      else if (isOpen) {
+        // STUDENT: Registration OPEN → enable form
+        formSection.querySelectorAll("input, select, button").forEach(el => {
+          if (el.id !== "lookupGrNo" && el.id !== "downloadByGrBtn") {
+            el.disabled = false;
+          }
+        });
+        closedMessage.classList.add("hidden");
+      }
+      else {
+        // STUDENT: Registration CLOSED → disable only form, KEEP DOWNLOAD WORKING
+        formSection.querySelectorAll("input, select, button").forEach(el => {
+          if (el.id !== "lookupGrNo" && el.id !== "downloadByGrBtn") {
+            el.disabled = true;
+          }
+        });
+        closedMessage.classList.remove("hidden");
+      }
     } else {
-      // Registration closed for students
-      const inputs = formSection.querySelectorAll("input, select, button[type='submit']");
-      inputs.forEach(el => el.disabled = true);    // disable all inputs
-      closedMessage.classList.remove("hidden");    // show closed message
+      console.warn("No registration status found. Assuming closed.");
+      closedMessage.classList.remove("hidden");
+      // Still keep download enabled
     }
-
-  } else {
-    console.error("⚠️ Registration status not found in Firestore!");
+  } catch (error) {
+    console.error("Firestore error:", error);
+    showMessageBox("Failed to check registration status. Download still works.", "error");
   }
 }
 
-// ✅ Make sure this runs after DOM loads
-document.addEventListener("DOMContentLoaded", checkRegistrationStatus);
+// Run on page load
+document.addEventListener("DOMContentLoaded", () => {
+  checkRegistrationStatus();
+  
+  // Re-run every 10 seconds in case status changes
+  setInterval(checkRegistrationStatus, 10000);
+});
 </script>
 
 </body>
