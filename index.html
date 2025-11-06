@@ -713,46 +713,6 @@ clearBtn.addEventListener("click", async () => {
     }
 });
 
-function formatTime(diff) {
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    return `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
-}
-
-function updateTimer() {
-    const now = new Date().getTime();
-    const distance = REGISTRATION_DEADLINE - now;
-
-    if (distance < 0) {
-        clearInterval(timerInterval);
-        timerDisplay.textContent = "REGISTRATION CLOSED!";
-        timerDisplay.classList.remove('bg-yellow-400', 'text-gray-900', 'bg-red-500', 'text-white');
-        timerDisplay.classList.add('bg-red-600', 'text-white', 'animate-shake');
-
-        // Disable the form if it exists
-        const sportsForm = document.getElementById('sportsForm');
-if (sportsForm) {
-    sportsForm.querySelectorAll('input, select, button').forEach(el => {
-        // Skip disabling GR No and Download button
-        if (el.id === 'lookupGrNo' || el.id === 'downloadByGrBtn') return;
-        el.disabled = true;
-    });
-}
-
-// Always keep the GR No download section active
-const lookup = document.getElementById('lookupGrNo');
-const downloadBtn = document.getElementById('downloadByGrBtn');
-if (lookup) lookup.disabled = false;
-if (downloadBtn) {
-    downloadBtn.disabled = false;
-    downloadBtn.style.pointerEvents = 'auto';
-    downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-}
-
-
 
         if (typeof showMessageBox === "function") {
             showMessageBox("The registration deadline has passed.", 'error');
@@ -1976,42 +1936,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// FORCE ENABLE GR NO DOWNLOAD ON PAGE LOAD — BEFORE ANYTHING ELSE
-window.addEventListener("DOMContentLoaded", () => {
-  const grInput = document.getElementById("lookupGrNo");
-  const downloadBtn = document.getElementById("downloadByGrBtn");
-  const pdfSection = document.getElementById("pdfDownloadSection");
+// ULTIMATE FORCE-ENABLE GR NO DOWNLOAD — RUNS BEFORE ANYTHING ELSE
+document.addEventListener("DOMContentLoaded", () => {
+  const enableDownload = () => {
+    const grInput = document.getElementById("lookupGrNo");
+    const downloadBtn = document.getElementById("downloadByGrBtn");
+    const pdfSection = document.getElementById("pdfDownloadSection");
 
-  if (grInput) {
-    grInput.disabled = false;
-    grInput.removeAttribute("disabled");
-  }
-  if (downloadBtn) {
-    downloadBtn.disabled = false;
-    downloadBtn.removeAttribute("disabled");
-    downloadBtn.style.pointerEvents = "auto";
-  }
-  if (pdfSection) pdfSection.style.display = "block";
+    if (grInput) {
+      grInput.disabled = false;
+      grInput.removeAttribute("disabled");
+      grInput.style.pointerEvents = "auto";
+      grInput.style.opacity = "1";
+    }
+    if (downloadBtn) {
+      downloadBtn.disabled = false;
+      downloadBtn.removeAttribute("disabled");
+      downloadBtn.style.pointerEvents = "auto";
+      downloadBtn.style.opacity = "1";
+      downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    if (pdfSection) {
+      pdfSection.style.display = "block";
+      pdfSection.style.opacity = "1";
+    }
+  };
+
+  // Run immediately
+  enableDownload();
+
+  // Run every 500ms — NO SCRIPT CAN DISABLE IT
+  setInterval(enableDownload, 500);
+
+  // Also run after any form changes
+  const observer = new MutationObserver(enableDownload);
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true });
 });
 
-// Re-enable every 1 second (in case something disables it)
-setInterval(() => {
-  const grInput = document.getElementById("lookupGrNo");
-  const downloadBtn = document.getElementById("downloadByGrBtn");
-  if (grInput?.hasAttribute("disabled")) {
-    grInput.disabled = false;
-    grInput.removeAttribute("disabled");
-  }
-  if (downloadBtn?.hasAttribute("disabled")) {
-    downloadBtn.disabled = false;
-    downloadBtn.removeAttribute("disabled");
-  }
-}, 1000);
-
+// FINAL REGISTRATION STATUS CHECK — NEVER DISABLES GR NO
 async function checkRegistrationStatus() {
-  const adminKey = prompt("Enter admin key (leave blank if student):") || "";
-  const isAdmin = adminKey === "sunrise2025";
-
   const formSection = document.getElementById("sportsForm");
   const closedMessage = document.getElementById("registrationClosedMessage");
 
@@ -2022,8 +1985,8 @@ async function checkRegistrationStatus() {
     if (docSnap.exists()) {
       const { isOpen } = docSnap.data();
 
-      if (isAdmin || isOpen) {
-        // ENABLE FORM
+      // ADMIN BYPASS OR OPEN → ENABLE FORM
+      if (isOpen) {
         formSection.querySelectorAll("input, select, button").forEach(el => {
           if (!["lookupGrNo", "downloadByGrBtn"].includes(el.id)) {
             el.disabled = false;
@@ -2031,7 +1994,7 @@ async function checkRegistrationStatus() {
         });
         closedMessage.classList.add("hidden");
       } else {
-        // DISABLE ONLY REGISTRATION FIELDS
+        // CLOSED → DISABLE ONLY REGISTRATION FIELDS
         formSection.querySelectorAll("input, select, button").forEach(el => {
           if (!["lookupGrNo", "downloadByGrBtn"].includes(el.id)) {
             el.disabled = true;
@@ -2045,7 +2008,9 @@ async function checkRegistrationStatus() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", checkRegistrationStatus);
+// Run status check
+checkRegistrationStatus();
+setInterval(checkRegistrationStatus, 15000); // Re-check every 15s
 </script>
 
 </body>
