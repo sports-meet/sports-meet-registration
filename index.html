@@ -742,11 +742,22 @@ function updateTimer() {
         const sportsForm = document.getElementById('sportsForm');
 if (sportsForm) {
     sportsForm.querySelectorAll('input, select, button').forEach(el => {
-        if (el.id !== 'lookupGrNo' && el.id !== 'downloadByGrBtn') { // exempt GR No & download button
-            el.disabled = true;
-        }
+        // Skip disabling GR No and Download button
+        if (el.id === 'lookupGrNo' || el.id === 'downloadByGrBtn') return;
+        el.disabled = true;
     });
 }
+
+// Always keep the GR No download section active
+const lookup = document.getElementById('lookupGrNo');
+const downloadBtn = document.getElementById('downloadByGrBtn');
+if (lookup) lookup.disabled = false;
+if (downloadBtn) {
+    downloadBtn.disabled = false;
+    downloadBtn.style.pointerEvents = 'auto';
+    downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+}
+
 
 
         if (typeof showMessageBox === "function") {
