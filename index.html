@@ -2009,9 +2009,6 @@ setInterval(() => {
 }, 1000);
 
 async function checkRegistrationStatus() {
-  const adminKey = prompt("Enter admin key (leave blank if student):") || "";
-  const isAdmin = adminKey === "sunrise2025";
-
   const formSection = document.getElementById("sportsForm");
   const closedMessage = document.getElementById("registrationClosedMessage");
 
@@ -2021,9 +2018,10 @@ async function checkRegistrationStatus() {
 
     if (docSnap.exists()) {
       const { isOpen } = docSnap.data();
+      let isAdmin = false;
 
-      if (isAdmin || isOpen) {
-        // ENABLE FORM
+      if (isOpen) {
+        // Registration is open — no popup, just enable everything
         formSection.querySelectorAll("input, select, button").forEach(el => {
           if (!["lookupGrNo", "downloadByGrBtn"].includes(el.id)) {
             el.disabled = false;
@@ -2031,19 +2029,34 @@ async function checkRegistrationStatus() {
         });
         closedMessage.classList.add("hidden");
       } else {
-        // DISABLE ONLY REGISTRATION FIELDS
-        formSection.querySelectorAll("input, select, button").forEach(el => {
-          if (!["lookupGrNo", "downloadByGrBtn"].includes(el.id)) {
-            el.disabled = true;
-          }
-        });
-        closedMessage.classList.remove("hidden");
+        // Registration is closed — ask for admin key
+        const adminKey = prompt("Enter admin key (leave blank if student):") || "";
+        isAdmin = adminKey === "sunrise2025";
+
+        if (isAdmin) {
+          // Admin can still edit
+          formSection.querySelectorAll("input, select, button").forEach(el => {
+            if (!["lookupGrNo", "downloadByGrBtn"].includes(el.id)) {
+              el.disabled = false;
+            }
+          });
+          closedMessage.classList.add("hidden");
+        } else {
+          // Students cannot edit
+          formSection.querySelectorAll("input, select, button").forEach(el => {
+            if (!["lookupGrNo", "downloadByGrBtn"].includes(el.id)) {
+              el.disabled = true;
+            }
+          });
+          closedMessage.classList.remove("hidden");
+        }
       }
     }
   } catch (err) {
     console.error("Firestore error:", err);
   }
 }
+
 
 document.addEventListener("DOMContentLoaded", checkRegistrationStatus);
 </script>
