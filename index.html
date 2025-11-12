@@ -1273,7 +1273,8 @@ updateTimer(); // Run once immediately
         return `${day}/${month}/${year}`;
     }
 
-    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Events", "Results"];
+    // ✅ Added "Category" column before "Events"
+    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Category", "Events", "Results"];
     const worksheetData = [];
 
     worksheetData.push(["Sunrise English Private School, L.L.C, O.P.C, Mussafah, Abu Dhabi"]);
@@ -1281,6 +1282,7 @@ updateTimer(); // Run once immediately
     worksheetData.push([]);
     worksheetData.push(headers);
 
+    // ✅ Include category value in each row (or show '—' if missing)
     data.forEach((reg, i) => {
         worksheetData.push([
             i + 1,
@@ -1289,6 +1291,7 @@ updateTimer(); // Run once immediately
             `${reg.class}-${reg.division}`,
             reg.house,
             formatDateDMY(reg.dob),
+            reg.category || "—",
             reg.events.join(", "),
             "" // Results column empty for admin to fill
         ]);
