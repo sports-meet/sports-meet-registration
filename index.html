@@ -1249,7 +1249,6 @@ updateTimer(); // Run once immediately
 
     const workbook = XLSX.utils.book_new();
 
-    // Get filters
     const filters = {
         class: document.getElementById('filterClass')?.value || "",
         division: document.getElementById('filterDivision')?.value || "",
@@ -1257,7 +1256,6 @@ updateTimer(); // Run once immediately
         event: document.getElementById('filterEvent')?.value || ""
     };
 
-    // Build filter line dynamically
     let filterLine = [];
     if (filters.event) filterLine.push(`Event: ${filters.event}`);
     if (filters.class) filterLine.push(`Class: ${filters.class} ${filters.division || ""}`.trim());
@@ -1273,8 +1271,12 @@ updateTimer(); // Run once immediately
         return `${day}/${month}/${year}`;
     }
 
-    // Correct column order
-    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Category", "Events", "Results"];
+    // FINAL CORRECT ORDER
+    const headers = [
+        "Sr.No", "GR No", "Full Name", "Class & Division",
+        "House", "DOB", "Category", "Events", "Results"
+    ];
+
     const worksheetData = [];
 
     worksheetData.push(["Sunrise English Private School, L.L.C, O.P.C, Mussafah, Abu Dhabi"]);
@@ -1282,7 +1284,7 @@ updateTimer(); // Run once immediately
     worksheetData.push([]);
     worksheetData.push(headers);
 
-    // Correct row order (Category before Events)
+    // FINAL CORRECT ROW ORDER (Category BEFORE Events)
     data.forEach((reg, i) => {
         worksheetData.push([
             i + 1,
@@ -1299,12 +1301,10 @@ updateTimer(); // Run once immediately
 
     const sheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
-    // Merge title row
     sheet['!merges'] = [
         { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
     ];
 
-    // Title styling
     const titleCell = sheet["A1"];
     if (titleCell) {
         titleCell.s = {
@@ -1313,7 +1313,6 @@ updateTimer(); // Run once immediately
         };
     }
 
-    // Auto-fit columns
     const colWidths = worksheetData[3].map((_, colIndex) => {
         let maxLength = 10;
         worksheetData.forEach(row => {
@@ -1331,6 +1330,7 @@ updateTimer(); // Run once immediately
 
     showMessageBox(`Downloaded ${data.length} registrations successfully!`, 'success');
 }
+
 
 
 
