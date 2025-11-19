@@ -1273,7 +1273,8 @@ updateTimer(); // Run once immediately
         return `${day}/${month}/${year}`;
     }
 
-    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Events", "Category", "Results"];
+    // Correct column order
+    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Category", "Events", "Results"];
     const worksheetData = [];
 
     worksheetData.push(["Sunrise English Private School, L.L.C, O.P.C, Mussafah, Abu Dhabi"]);
@@ -1281,6 +1282,7 @@ updateTimer(); // Run once immediately
     worksheetData.push([]);
     worksheetData.push(headers);
 
+    // Correct row order (Category before Events)
     data.forEach((reg, i) => {
         worksheetData.push([
             i + 1,
@@ -1289,20 +1291,20 @@ updateTimer(); // Run once immediately
             `${reg.class}-${reg.division}`,
             reg.house,
             formatDateDMY(reg.dob),
-            reg.events.join(", "),
-            reg.category || "",   // Category column
-            ""  // Results column empty for admin to fill
+            reg.category || "",           // Category
+            reg.events.join(", "),        // Events
+            ""                            // Results
         ]);
     });
 
     const sheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
-    // Merge first row (school name) across all columns
+    // Merge title row
     sheet['!merges'] = [
         { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
     ];
 
-    // Style for title cell
+    // Title styling
     const titleCell = sheet["A1"];
     if (titleCell) {
         titleCell.s = {
@@ -1326,12 +1328,14 @@ updateTimer(); // Run once immediately
 
     XLSX.utils.book_append_sheet(workbook, sheet, "Registrations");
     XLSX.writeFile(workbook, filename);
+
     showMessageBox(`Downloaded ${data.length} registrations successfully!`, 'success');
 }
 
 
 
 
+    
     function downloadResultsXLSX() {
     if (allResults.length === 0) {
         showMessageBox('No results to download.', 'error');
