@@ -1249,7 +1249,7 @@ updateTimer(); // Run once immediately
 
     const workbook = XLSX.utils.book_new();
 
-    // ✅ Get filters
+    // Get filters
     const filters = {
         class: document.getElementById('filterClass')?.value || "",
         division: document.getElementById('filterDivision')?.value || "",
@@ -1257,7 +1257,7 @@ updateTimer(); // Run once immediately
         event: document.getElementById('filterEvent')?.value || ""
     };
 
-    // ✅ Build filter line dynamically
+    // Build filter line dynamically
     let filterLine = [];
     if (filters.event) filterLine.push(`Event: ${filters.event}`);
     if (filters.class) filterLine.push(`Class: ${filters.class} ${filters.division || ""}`.trim());
@@ -1273,7 +1273,7 @@ updateTimer(); // Run once immediately
         return `${day}/${month}/${year}`;
     }
 
-    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Events", "Results"];
+    const headers = ["Sr.No", "GR No", "Full Name", "Class & Division", "House", "DOB", "Events", "Category", "Results"];
     const worksheetData = [];
 
     worksheetData.push(["Sunrise English Private School, L.L.C, O.P.C, Mussafah, Abu Dhabi"]);
@@ -1290,7 +1290,8 @@ updateTimer(); // Run once immediately
             reg.house,
             formatDateDMY(reg.dob),
             reg.events.join(", "),
-            "" // Results column empty for admin to fill
+            reg.category || "",   // Category column
+            ""  // Results column empty for admin to fill
         ]);
     });
 
@@ -1301,16 +1302,16 @@ updateTimer(); // Run once immediately
         { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
     ];
 
-    // Center the school name
-    const cell = sheet["A1"];
-    if (cell) {
-        cell.s = {
+    // Style for title cell
+    const titleCell = sheet["A1"];
+    if (titleCell) {
+        titleCell.s = {
             alignment: { horizontal: "center", vertical: "center" },
             font: { bold: true, sz: 14 }
         };
     }
 
-    // AUTO-FIT columns
+    // Auto-fit columns
     const colWidths = worksheetData[3].map((_, colIndex) => {
         let maxLength = 10;
         worksheetData.forEach(row => {
@@ -1327,6 +1328,7 @@ updateTimer(); // Run once immediately
     XLSX.writeFile(workbook, filename);
     showMessageBox(`Downloaded ${data.length} registrations successfully!`, 'success');
 }
+
 
 
 
