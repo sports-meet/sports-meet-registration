@@ -444,6 +444,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
                 <button id="downloadResultsBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Results XLSX</button>
                 <button id="clearFiltersBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Clear Filters</button>
                 <button id="clearAllBtn" class="app-button app-button-red mt-2">Clear All Registrations</button>
+                <button id="clearFinalistsBtn" class="app-button app-button-yellow text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Clear Finalists</button>
+
 
             </div>
         </div>
@@ -1747,6 +1749,12 @@ doneBtn.addEventListener('click', () => {
 });
 
 manageResultsBtn.addEventListener('click', openResultsModal);
+
+clearFinalistsBtn.addEventListener('click', () => {
+    filteredRegistrations.forEach(reg => reg.isFinalist = false);
+    alert("All finalist flags cleared!");
+});
+
 resultCancelBtn.addEventListener('click', closeResultsModal);
 
 resultSaveBtn.addEventListener('click', async () => {
