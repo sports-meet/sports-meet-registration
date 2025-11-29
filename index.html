@@ -444,8 +444,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 800; } /* Closed for h1-h6 */
                 <button id="downloadResultsBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Download Results XLSX</button>
                 <button id="clearFiltersBtn" class="app-button app-button-red text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Clear Filters</button>
                 <button id="clearAllBtn" class="app-button app-button-red mt-2">Clear All Registrations</button>
-                <button id="clearFinalistsBtn" class="app-button app-button-yellow text-base py-2 px-4 shadow-md w-1/2 sm:w-auto">Clear Finalists</button>
-
 
             </div>
         </div>
@@ -1735,92 +1733,53 @@ updateTimer(); // Run once immediately
         downloadCsvBtn.addEventListener('click', () => {
             downloadXLSX(filteredRegistrations, "sports_registrations_all.xlsx");
         });
-        // Download Finalists XLSX
-downloadFinalistsCsvBtn.addEventListener('click', () => {
-    const finalists = allRegistrations.filter(reg => reg.isFinalist); // use main array
-    downloadXLSX(finalists, "sports_registrations_finalists.xlsx");
-});
-
-// Save PDF
-savePdfBtn.addEventListener('click', () => {
-    window.print();
-});
-
-// Done button
-doneBtn.addEventListener('click', () => {
-    toggleView('form');
-});
-
-// Manage Results modal
-manageResultsBtn.addEventListener('click', openResultsModal);
-
-// CLEAR FINALISTS button
-clearFinalistsBtn.addEventListener('click', () => {
-    // Reset all finalist flags in the main array
-    allRegistrations.forEach(reg => reg.isFinalist = false);
-
-    // Optional: refresh filteredRegistrations and redraw table if needed
-    filteredRegistrations = [...allRegistrations];
-    renderTable(filteredRegistrations); // ensure this function exists to redraw table
-
-    alert("All finalist flags cleared!");
-});
-
-// Cancel Results modal
-resultCancelBtn.addEventListener('click', closeResultsModal);
-
-// Save Results modal
-resultSaveBtn.addEventListener('click', async () => {
+        downloadFinalistsCsvBtn.addEventListener('click', () => {
+            const finalists = filteredRegistrations.filter(reg => reg.isFinalist);
+            downloadXLSX(finalists, "sports_registrations_finalists.xlsx");
+        });
+        savePdfBtn.addEventListener('click', () => {
+            window.print();
+        });
+        doneBtn.addEventListener('click', () => {
+            toggleView('form');
+        });
+        manageResultsBtn.addEventListener('click', openResultsModal);
+        resultCancelBtn.addEventListener('click', closeResultsModal);
+        resultSaveBtn.addEventListener('click', async () => {
     const inputs = finalistsList.querySelectorAll('.result-input');
     const groups = {};
-
     inputs.forEach(input => {
         if (input.value.trim()) {
             const group = input.dataset.group;
             const index = input.dataset.index;
             const house = input.dataset.house;
-
             if (!groups[group]) groups[group] = [];
             groups[group].push({ index: parseInt(index), value: input.value.trim(), house });
         }
     });
-
     if (Object.keys(groups).length === 0) {
         showMessageBox('Please enter at least one result.', 'error');
         return;
     }
-
     showConfirmationModal(
         'Confirm Save',
         'Are you sure you want to save all entered results?',
         async () => {
             try {
                 await Promise.all(Object.keys(groups).map(async (group) => {
-
                     const [classVal, division, gender, eventVal] = group.split('-');
-
-                    const students = allRegistrations.filter(reg =>
+                    const students = allRegistrations.filter(reg => 
                         reg.class === classVal &&
                         reg.division === division &&
                         reg.gender === gender &&
                         reg.isFinalist
                     );
-
-                    // EXACT EVENT MATCH
-                    const finalists = students.filter(stu =>
-                        Array.isArray(stu.events)
-                            ? stu.events.includes(eventVal)
-                            : stu.event === eventVal
-                    );
-
+                    const finalists = students.filter(stu => stu.events.includes(eventVal));
                     let details = '';
-                    groups[group]
-                        .sort((a, b) => a.index - b.index)
-                        .forEach(entry => {
-                            const stu = finalists[entry.index];
-                            details += `${stu.name} (${stu.house}): ${entry.value}\n`;
-                        });
-
+                    groups[group].sort((a, b) => a.index - b.index).forEach(entry => {
+                        const stu = finalists[entry.index];
+                        details += `${stu.name} (${stu.house}): ${entry.value}\n`;
+                    });
                     const data = {
                         classVal,
                         division,
@@ -1829,14 +1788,11 @@ resultSaveBtn.addEventListener('click', async () => {
                         details,
                         timestamp: Date.now()
                     };
-
                     const key = group;
                     await setDoc(doc(db, RESULTS_COLLECTION_PATH, key), data);
                 }));
-
                 showMessageBox('All results saved successfully!', 'success');
                 closeResultsModal();
-
             } catch (e) {
                 console.error("Error saving results: ", e);
                 showMessageBox('Failed to save some results.', 'error');
@@ -1846,8 +1802,6 @@ resultSaveBtn.addEventListener('click', async () => {
         'bg-green-600'
     );
 });
-
-
         downloadResultsBtn.addEventListener('click', downloadResultsXLSX);
     }
 
