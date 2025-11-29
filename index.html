@@ -1735,28 +1735,41 @@ updateTimer(); // Run once immediately
         downloadCsvBtn.addEventListener('click', () => {
             downloadXLSX(filteredRegistrations, "sports_registrations_all.xlsx");
         });
-        downloadFinalistsCsvBtn.addEventListener('click', () => {
-    const finalists = filteredRegistrations.filter(reg => reg.isFinalist);
+        // Download Finalists XLSX
+downloadFinalistsCsvBtn.addEventListener('click', () => {
+    const finalists = allRegistrations.filter(reg => reg.isFinalist); // use main array
     downloadXLSX(finalists, "sports_registrations_finalists.xlsx");
 });
 
+// Save PDF
 savePdfBtn.addEventListener('click', () => {
     window.print();
 });
 
+// Done button
 doneBtn.addEventListener('click', () => {
     toggleView('form');
 });
 
+// Manage Results modal
 manageResultsBtn.addEventListener('click', openResultsModal);
 
+// CLEAR FINALISTS button
 clearFinalistsBtn.addEventListener('click', () => {
-    filteredRegistrations.forEach(reg => reg.isFinalist = false);
+    // Reset all finalist flags in the main array
+    allRegistrations.forEach(reg => reg.isFinalist = false);
+
+    // Optional: refresh filteredRegistrations and redraw table if needed
+    filteredRegistrations = [...allRegistrations];
+    renderTable(filteredRegistrations); // ensure this function exists to redraw table
+
     alert("All finalist flags cleared!");
 });
 
+// Cancel Results modal
 resultCancelBtn.addEventListener('click', closeResultsModal);
 
+// Save Results modal
 resultSaveBtn.addEventListener('click', async () => {
     const inputs = finalistsList.querySelectorAll('.result-input');
     const groups = {};
@@ -1793,7 +1806,7 @@ resultSaveBtn.addEventListener('click', async () => {
                         reg.isFinalist
                     );
 
-                    // FIXED: EXACT EVENT MATCH (NO MORE MIXING)
+                    // EXACT EVENT MATCH
                     const finalists = students.filter(stu =>
                         Array.isArray(stu.events)
                             ? stu.events.includes(eventVal)
@@ -1833,6 +1846,7 @@ resultSaveBtn.addEventListener('click', async () => {
         'bg-green-600'
     );
 });
+
 
         downloadResultsBtn.addEventListener('click', downloadResultsXLSX);
     }
